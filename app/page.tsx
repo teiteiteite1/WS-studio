@@ -17,8 +17,8 @@ export default function Home() {
           <div className="hero-title-row">
             <h1 id="hero-title"><Logo hero /></h1>
             <p className="hero-statement">
-              当studioではAIと共作でイラスト、動画、音楽、キャラクターを作成しております。<br />
-              依頼は随時受け付けておりますので、下記CONTACTフォームまたはXのDMにてご連絡ください。
+              <span>当studioではAIと共作でイラスト、動画、音楽、キャラクターを作成しております。</span>
+              <span>依頼は随時受け付けておりますので、下記CONTACTフォームまたはXのDMにてご連絡ください。</span>
             </p>
           </div>
           <p className="hero-intro">Illustration&nbsp;&nbsp; Music&nbsp;&nbsp; Film&nbsp;&nbsp; Character</p>
