@@ -5,6 +5,7 @@ export const navigation = [
   ["GALLERY", "/#gallery"],
   ["MUSIC", "/#music"],
   ["SNS", "/#sns"],
+  ["SHOP", "/#shop"],
   ["PROFILE", "/#profile"],
   ["NEWS", "/#news"],
   ["CONTACT", "/#contact"],

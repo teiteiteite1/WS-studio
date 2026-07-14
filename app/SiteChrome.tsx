@@ -13,10 +13,9 @@ export function Logo({ hero = false }: { hero?: boolean }) {
   );
 }
 
-export function SectionTitle({ index, title }: { index: string; title: string }) {
+export function SectionTitle({ title }: { title: string }) {
   return (
     <div className="section-title">
-      <span>{index}</span>
       <h2>{title}</h2>
     </div>
   );

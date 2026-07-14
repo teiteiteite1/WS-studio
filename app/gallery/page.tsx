@@ -13,9 +13,7 @@ export default function GalleryPage() {
     <main className="archive-page gallery-archive">
       <SiteHeader />
       <header className="archive-heading">
-        <p>01 / Selected works</p>
         <h1>Gallery</h1>
-        <span>{String(galleryItems.length).padStart(2, "0")} works</span>
       </header>
       <section className="archive-content" aria-label="All gallery works">
         <GalleryGrid items={galleryItems} randomize />

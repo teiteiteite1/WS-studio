@@ -41,7 +41,7 @@ export default function GalleryGrid({
 
   return (
     <div className="gallery-grid">
-      {visibleItems.map((item, index) => (
+      {visibleItems.map((item) => (
         <figure className="gallery-card" key={item.src}>
           <Image
             src={item.src}
@@ -49,7 +49,6 @@ export default function GalleryGrid({
             fill
             sizes="(max-width: 640px) 33vw, (max-width: 1100px) 50vw, 33vw"
           />
-          <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
         </figure>
       ))}
     </div>

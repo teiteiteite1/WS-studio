@@ -13,7 +13,6 @@ export default function MusicPage() {
     <main className="archive-page music-archive">
       <SiteHeader />
       <header className="archive-heading">
-        <p>02 / Discography</p>
         <h1>Music</h1>
         <a
           href="https://open.spotify.com/intl-ja/artist/5sZuyjE2PdlFgWLkJjpYPf"
