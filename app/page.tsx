@@ -115,11 +115,28 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="content-section journal-section" id="journal">
+        <SectionTitle title="Journal" />
+        <div className="journal-panel">
+          <p>Coming soon.</p>
+        </div>
+      </section>
+
       <section className="content-section contact-section" id="contact">
         <div className="contact-heading">
           <SectionTitle title="Contact" />
         </div>
         <ContactForm />
+      </section>
+
+      <section className="privacy-section" aria-labelledby="privacy-title">
+        <div>
+          <h2 id="privacy-title">Privacy Policy</h2>
+          <p>WS studio（以下「当studio」）は、お問い合わせフォームを通じて取得した氏名、メールアドレスその他の情報を、お問い合わせへの回答および必要な連絡のためにのみ利用します。</p>
+          <p>取得した個人情報は、法令に基づく場合または本人の同意がある場合を除き、第三者へ提供しません。また、個人情報の漏えい、紛失、改ざん等を防ぐため、適切な安全管理に努めます。</p>
+          <p>当サイトからリンクする外部サイトにおける個人情報の取扱いについて、当studioは責任を負いません。本ポリシーは、必要に応じて予告なく変更する場合があります。</p>
+          <p>個人情報に関するお問い合わせは、上記CONTACTフォームよりご連絡ください。</p>
+        </div>
       </section>
 
       <SiteFooter />

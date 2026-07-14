@@ -8,6 +8,7 @@ export const navigation = [
   ["SHOP", "/#shop"],
   ["PROFILE", "/#profile"],
   ["NEWS", "/#news"],
+  ["JOURNAL", "/#journal"],
   ["CONTACT", "/#contact"],
 ] as const;
 
