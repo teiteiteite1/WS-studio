@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 export type MusicTrack = {
@@ -10,9 +10,39 @@ export type MusicTrack = {
   previewUrl: string;
 };
 
-export default function MusicGrid({ tracks }: { tracks: MusicTrack[] }) {
+function shuffleTracks(tracks: MusicTrack[]) {
+  const shuffled = [...tracks];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+export default function MusicGrid({
+  tracks,
+  randomize = false,
+  limit,
+}: {
+  tracks: MusicTrack[];
+  randomize?: boolean;
+  limit?: number;
+}) {
+  const [visibleTracks, setVisibleTracks] = useState(() => tracks.slice(0, limit));
   const [activeTrack, setActiveTrack] = useState<number | null>(null);
   const audioRefs = useRef<Array<HTMLAudioElement | null>>([]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const nextTracks = randomize ? shuffleTracks(tracks) : [...tracks];
+      setVisibleTracks(nextTracks.slice(0, limit));
+      setActiveTrack(null);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [tracks, limit, randomize]);
 
   async function toggleTrack(index: number) {
     const selected = audioRefs.current[index];
@@ -41,7 +71,7 @@ export default function MusicGrid({ tracks }: { tracks: MusicTrack[] }) {
 
   return (
     <div className="music-grid">
-      {tracks.map((track, index) => {
+      {visibleTracks.map((track, index) => {
         const isPlaying = activeTrack === index;
 
         return (

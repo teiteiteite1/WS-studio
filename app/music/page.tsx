@@ -24,7 +24,7 @@ export default function MusicPage() {
         </a>
       </header>
       <section className="archive-content" aria-label="All music releases">
-        <MusicGrid tracks={musicTracks} />
+        <MusicGrid tracks={musicTracks} randomize />
       </section>
       <SiteFooter />
     </main>

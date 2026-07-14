@@ -1,14 +1,47 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 type GalleryItem = {
   src: string;
   alt: string;
 };
 
-export default function GalleryGrid({ items }: { items: readonly GalleryItem[] }) {
+function shuffleItems<T>(items: readonly T[]) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+export default function GalleryGrid({
+  items,
+  randomize = false,
+  limit,
+}: {
+  items: readonly GalleryItem[];
+  randomize?: boolean;
+  limit?: number;
+}) {
+  const [visibleItems, setVisibleItems] = useState(() => items.slice(0, limit));
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const nextItems = randomize ? shuffleItems(items) : [...items];
+      setVisibleItems(nextItems.slice(0, limit));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [items, limit, randomize]);
+
   return (
     <div className="gallery-grid">
-      {items.map((item, index) => (
+      {visibleItems.map((item, index) => (
         <figure className="gallery-card" key={item.src}>
           <Image
             src={item.src}

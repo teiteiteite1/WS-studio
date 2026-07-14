@@ -36,7 +36,7 @@ export default function Home() {
           <SectionTitle index="01" title="Gallery" />
           <Link className="section-link" href="/gallery">More →</Link>
         </div>
-        <GalleryGrid items={galleryItems.slice(0, 6)} />
+        <GalleryGrid items={galleryItems} randomize limit={6} />
       </section>
 
       <section className="content-section music-section" id="music">
@@ -44,7 +44,7 @@ export default function Home() {
           <SectionTitle index="02" title="Music" />
           <Link className="section-link" href="/music">More →</Link>
         </div>
-        <MusicGrid tracks={musicTracks.slice(0, 6)} />
+        <MusicGrid tracks={musicTracks} randomize limit={6} />
       </section>
 
       <section className="content-section sns-section" id="sns">

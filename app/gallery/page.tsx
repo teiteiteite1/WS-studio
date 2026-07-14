@@ -18,7 +18,7 @@ export default function GalleryPage() {
         <span>{String(galleryItems.length).padStart(2, "0")} works</span>
       </header>
       <section className="archive-content" aria-label="All gallery works">
-        <GalleryGrid items={galleryItems} />
+        <GalleryGrid items={galleryItems} randomize />
       </section>
       <SiteFooter />
     </main>
