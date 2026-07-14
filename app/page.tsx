@@ -1,60 +1,26 @@
 import Image from "next/image";
-
-const works = [
-  {
-    src: "/works/angel-green.jpg",
-    alt: "A winged girl in soft blue light",
-    label: "Illustration 01",
-    className: "work-card work-card--wide work-card--light",
-  },
-  {
-    src: "/works/angel-apple.jpg",
-    alt: "A winged girl holding a red apple",
-    label: "Illustration 02",
-    className: "work-card work-card--wide work-card--showcase",
-  },
-];
-
-function Logo({ hero = false }: { hero?: boolean }) {
-  return (
-    <span className={hero ? "logo logo--hero" : "logo"} role="img" aria-label="WS studio">
-      <span className="logo-mark" aria-hidden="true">
-        <span>W</span>
-        <span>S</span>
-      </span>
-      <span aria-hidden="true">studio</span>
-    </span>
-  );
-}
+import Link from "next/link";
+import ContactForm from "./ContactForm";
+import GalleryGrid from "./GalleryGrid";
+import MusicGrid from "./MusicGrid";
+import { Logo, SectionTitle, SiteFooter, SiteHeader } from "./SiteChrome";
+import { galleryItems, musicTracks } from "./site-data";
 
 export default function Home() {
   return (
     <main>
-      <header className="site-header">
-        <nav className="nav-shell" aria-label="Main navigation">
-          <a className="brand-link" href="#top" aria-label="WS studio home">
-            <Logo />
-          </a>
-          <div className="nav-links">
-            <a href="#works">Works</a>
-            <a href="#studio">Studio</a>
-          </div>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="hero-copy">
           <p className="eyebrow">Creative studio / Japan</p>
-          <h1 id="hero-title">
-            <Logo hero />
-          </h1>
+          <h1 id="hero-title"><Logo hero /></h1>
           <p className="hero-intro">Illustration&nbsp;&nbsp; Music&nbsp;&nbsp; Film&nbsp;&nbsp; Character</p>
         </div>
-
-        <div className="hero-visual" aria-hidden="true">
+        <div className="hero-visual">
           <Image
             src="/works/angel-green.jpg"
-            alt=""
+            alt="A winged girl in soft blue light"
             fill
             unoptimized
             priority
@@ -63,65 +29,60 @@ export default function Home() {
           <div className="hero-wash" />
           <span className="hero-index">WS — 001</span>
         </div>
-
-        <a className="scroll-cue" href="#works" aria-label="View works">
-          <span>Scroll to explore</span>
-          <span className="scroll-line" />
-        </a>
       </section>
 
-      <section className="works-section" id="works" aria-labelledby="works-title">
-        <div className="section-heading section-heading--minimal">
-          <p className="eyebrow">Selected works / 2026</p>
-          <h2 id="works-title">Works</h2>
+      <section className="content-section gallery-section" id="gallery">
+        <div className="section-title-row">
+          <SectionTitle index="01" title="Gallery" />
+          <Link className="section-link" href="/gallery">More →</Link>
         </div>
+        <GalleryGrid items={galleryItems.slice(0, 6)} />
+      </section>
 
-        <div className="works-grid">
-          {works.map((work) => (
-            <article className={work.className} key={work.src}>
-              <Image
-                src={work.src}
-                alt={work.alt}
-                fill
-                unoptimized
-                sizes="94vw"
-              />
-              <div className="work-overlay" />
-              <div className="work-meta">
-                <span>{work.label}</span>
-                <span>WS studio</span>
-              </div>
-            </article>
-          ))}
+      <section className="content-section music-section" id="music">
+        <div className="section-title-row">
+          <SectionTitle index="02" title="Music" />
+          <Link className="section-link" href="/music">More →</Link>
+        </div>
+        <MusicGrid tracks={musicTracks.slice(0, 6)} />
+      </section>
+
+      <section className="content-section sns-section" id="sns">
+        <SectionTitle index="03" title="SNS" />
+        <div className="social-links">
+          <a href="https://x.com/WABISABI_pomo" target="_blank" rel="noreferrer">
+            <span>X</span><span>@WABISABI_pomo</span><i>↗</i>
+          </a>
+          <a href="https://www.instagram.com/teiteite1tei" target="_blank" rel="noreferrer">
+            <span>Instagram</span><span>@teiteite1tei</span><i>↗</i>
+          </a>
         </div>
       </section>
 
-      <section className="studio-section" id="studio" aria-labelledby="studio-title">
-        <div className="studio-symbol" aria-hidden="true">
-          <span className="logo-mark logo-mark--display">
-            <span>W</span>
-            <span>S</span>
-          </span>
-        </div>
-        <div className="studio-copy">
-          <p className="eyebrow">Creative disciplines</p>
-          <h2 id="studio-title">WS studio</h2>
-          <ul className="disciplines" aria-label="Creative disciplines">
-            <li>Illustration</li>
-            <li>Music</li>
-            <li>Film</li>
-            <li>Character</li>
-          </ul>
+      <section className="content-section quiet-section" id="profile">
+        <SectionTitle index="04" title="Profile" />
+        <div className="quiet-panel">
+          <span>WS</span>
+          <p>Coming soon</p>
         </div>
       </section>
 
-      <footer>
-        <a className="brand-link" href="#top" aria-label="WS studio home">
-          <Logo />
-        </a>
-        <p>© 2026 WS studio</p>
-        <a href="#top">Back to top ↑</a>
-      </footer>
+      <section className="content-section news-section" id="news">
+        <SectionTitle index="05" title="News" />
+        <div className="news-list">
+          <div><time>—</time><p>Coming soon</p><span>↗</span></div>
+        </div>
+      </section>
+
+      <section className="content-section contact-section" id="contact">
+        <div className="contact-heading">
+          <SectionTitle index="06" title="Contact" />
+          <a href="mailto:tei.wsstudio@gmail.com">tei.wsstudio@gmail.com</a>
+        </div>
+        <ContactForm />
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }
