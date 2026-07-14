@@ -14,7 +14,13 @@ export default function Home() {
       <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="hero-copy">
           <p className="eyebrow">Creative studio / Japan</p>
-          <h1 id="hero-title"><Logo hero /></h1>
+          <div className="hero-title-row">
+            <h1 id="hero-title"><Logo hero /></h1>
+            <p className="hero-statement">
+              当studioではAIと共作でイラスト、動画、音楽、キャラクターを作成しております。<br />
+              依頼は随時受け付けておりますので、下記CONTACTフォームまたはXのDMにてご連絡ください。
+            </p>
+          </div>
           <p className="hero-intro">Illustration&nbsp;&nbsp; Music&nbsp;&nbsp; Film&nbsp;&nbsp; Character</p>
         </div>
         <div className="hero-visual">
@@ -55,6 +61,9 @@ export default function Home() {
           <a href="https://www.instagram.com/teiteite1tei" target="_blank" rel="noreferrer">
             <span>Instagram</span><span>@teiteite1tei</span><i>↗</i>
           </a>
+          <a href="https://suno.com/@teiteiteitei" target="_blank" rel="noreferrer">
+            <span>SUNO</span><span>@teiteiteitei</span><i>↗</i>
+          </a>
         </div>
       </section>
 
@@ -73,7 +82,7 @@ export default function Home() {
               <Image src="/profile/tei.webp" alt="てい" fill sizes="(max-width: 640px) 100vw, 33vw" />
             </div>
             <h3>てい</h3>
-            <p>2026.6にWS studioを設立。自称AI playerとしてイラスト、動画、楽曲生成を手掛ける。</p>
+            <p>2025.6にWS studioを設立。自称AI playerとしてイラスト、動画、楽曲生成を手掛ける。</p>
           </article>
           <article className="profile-card">
             <div className="profile-image">
@@ -95,12 +104,13 @@ export default function Home() {
       <section className="content-section news-section" id="news">
         <SectionTitle title="News" />
         <div className="news-list">
-          <article><time dateTime="2025-06-04">2025.6.4</time><p>WS studio設立</p></article>
+          <article><span className="news-date">Coming soon...</span><p>AI音楽コンピレーションアルバム「Now Generating」作成中</p></article>
+          <article><time dateTime="2026-09-12">2026.9.12–13</time><p>Send AI Art Exhibitionにて展示、@仙台</p></article>
           <article>
             <time dateTime="2026-07-25">2026.7.25</time>
             <p><a href="https://tosu-designer.com/ai-fusion/" target="_blank" rel="noreferrer">AI FUSION FES</a>にて展示 @渋谷</p>
           </article>
-          <article><time dateTime="2026-09-12">2026.9.12–13</time><p>Send AI Art Exhibition @仙台</p></article>
+          <article><time dateTime="2025-06-04">2025.6.4</time><p>WS studio設立</p></article>
         </div>
       </section>
 
