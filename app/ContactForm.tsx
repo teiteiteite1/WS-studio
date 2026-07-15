@@ -7,12 +7,34 @@ type FormStatus = "idle" | "sending" | "sent" | "error";
 export default function ContactForm() {
   const [status, setStatus] = useState<FormStatus>("idle");
 
+  function submitWithoutAjax(form: HTMLFormElement) {
+    const hiddenFields = {
+      _subject: "WS studio — New contact",
+      _template: "table",
+      _url: window.location.href,
+      _next: `${window.location.origin}/?sent=1#contact`,
+    };
+
+    Object.entries(hiddenFields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    form.action = "https://formsubmit.co/tei.wsstudio@gmail.com";
+    form.method = "POST";
+    form.submit();
+  }
+
   async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
     formData.append("_subject", "WS studio — New contact");
     formData.append("_template", "table");
+    formData.append("_url", window.location.href);
     setStatus("sending");
 
     try {
@@ -25,16 +47,20 @@ export default function ContactForm() {
         },
       );
 
-      if (!response.ok) throw new Error("Unable to submit form");
+      const result = await response.json().catch(() => null);
+      if (!response.ok || result?.success === false) {
+        throw new Error("Unable to submit form");
+      }
       form.reset();
       setStatus("sent");
     } catch {
       setStatus("error");
+      submitWithoutAjax(form);
     }
   }
 
   return (
-    <form className="contact-form" onSubmit={submitForm}>
+    <form className="contact-form" method="POST" onSubmit={submitForm}>
       <input className="form-honey" type="text" name="_honey" tabIndex={-1} autoComplete="off" />
       <div className="form-row">
         <label>
@@ -61,7 +87,7 @@ export default function ContactForm() {
         </button>
         <p className="form-status" aria-live="polite">
           {status === "sent" && "Message sent."}
-          {status === "error" && "Unable to send. Please try again."}
+          {status === "error" && "Switching to secure send…"}
         </p>
       </div>
     </form>

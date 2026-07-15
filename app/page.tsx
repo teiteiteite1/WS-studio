@@ -116,7 +116,17 @@ export default function Home() {
       </section>
 
       <section className="content-section journal-section" id="journal">
-        <SectionTitle title="Journal" />
+        <div className="section-title-row">
+          <SectionTitle title="Journal" />
+          <a
+            className="section-link"
+            href="https://note.com/teiteiteite1"
+            target="_blank"
+            rel="noreferrer"
+          >
+            More ↗
+          </a>
+        </div>
         <div className="journal-panel">
           <p>Coming soon.</p>
         </div>
