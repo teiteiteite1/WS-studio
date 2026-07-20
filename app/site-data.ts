@@ -13,6 +13,12 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-13.webp", alt: "White-haired angel holding a black rose above the city" },
+  { src: "/gallery/gallery-14.webp", alt: "White-haired angel in translucent blue-white light" },
+  { src: "/gallery/gallery-15.webp", alt: "White-haired girl with green eyes holding a black rose" },
+  { src: "/gallery/gallery-16.webp", alt: "White-haired angel sitting on a branch in a forest" },
+  { src: "/gallery/gallery-17.webp", alt: "Girl with headphones holding a teddy bear at night" },
+  { src: "/gallery/gallery-18.webp", alt: "Angel artwork in cool blue light" },
   { src: "/gallery/gallery-07.webp", alt: "White-haired angel sitting beside blue water" },
   { src: "/gallery/gallery-08.webp", alt: "White-haired angel viewed from a low angle" },
   { src: "/gallery/gallery-09.webp", alt: "White-haired angel in an ornate white dress" },
