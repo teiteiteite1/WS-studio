@@ -3,10 +3,13 @@ import Link from "next/link";
 import ContactForm from "./ContactForm";
 import GalleryGrid from "./GalleryGrid";
 import MusicGrid from "./MusicGrid";
+import ShopGrid, { type ShopProduct } from "./ShopGrid";
 import { Logo, SectionTitle, SiteFooter, SiteHeader } from "./SiteChrome";
 import { galleryItems, musicTracks } from "./site-data";
 
 type NoteArticle = { title: string; description: string; url: string };
+
+const baseShopUrl = "https://wsstudiotei.base.shop/";
 
 function decodeXml(value: string) {
   const named: Record<string, string> = {
@@ -23,6 +26,49 @@ function decodeXml(value: string) {
 function rssTag(xml: string, tag: string) {
   const match = xml.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"));
   return match?.[1]?.replace(/^<!\[CDATA\[|\]\]>$/g, "").trim() ?? "";
+}
+
+function stripHtml(value: string) {
+  return decodeXml(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")).trim();
+}
+
+async function getBaseProducts(): Promise<ShopProduct[]> {
+  try {
+    const response = await fetch(baseShopUrl, {
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "WS-studio-site/1.0",
+      },
+      next: { revalidate: 600 },
+    });
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const cards = html.match(/<article\s+class=["']product-card["'][^>]*>[\s\S]*?<\/article>/gi) ?? [];
+
+    return cards.flatMap((card) => {
+      const url = decodeXml(card.match(/<a[^>]+href=["']([^"']*\/items\/\d+)["']/i)?.[1] ?? "");
+      const image = decodeXml(card.match(/<img[\s\S]*?src=["']([^"']+)["']/i)?.[1] ?? "");
+      const title = stripHtml(card.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i)?.[1] ?? "");
+      const price = stripHtml(card.match(/<p\s+class=["']price["'][^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "");
+
+      try {
+        const productUrl = new URL(url);
+        const imageUrl = new URL(image);
+        if (
+          productUrl.hostname !== "wsstudiotei.base.shop" ||
+          imageUrl.hostname !== "baseec-img-mng.akamaized.net" ||
+          !title
+        ) return [];
+      } catch {
+        return [];
+      }
+
+      return [{ title, price, image, url }];
+    });
+  } catch {
+    return [];
+  }
 }
 
 async function getLatestNoteArticles(): Promise<NoteArticle[]> {
@@ -50,7 +96,10 @@ async function getLatestNoteArticles(): Promise<NoteArticle[]> {
 }
 
 export default async function Home() {
-  const noteArticles = await getLatestNoteArticles();
+  const [noteArticles, shopProducts] = await Promise.all([
+    getLatestNoteArticles(),
+    getBaseProducts(),
+  ]);
 
   return (
     <main>
@@ -113,10 +162,17 @@ export default async function Home() {
       </section>
 
       <section className="content-section shop-section" id="shop">
-        <SectionTitle title="Shop" />
-        <div className="shop-panel">
-          <p>Coming soon</p>
+        <div className="section-title-row">
+          <SectionTitle title="Shop" />
+          <a className="section-link" href={baseShopUrl} target="_blank" rel="noreferrer">More ↗</a>
         </div>
+        {shopProducts.length > 0 ? (
+          <ShopGrid products={shopProducts} />
+        ) : (
+          <a className="shop-panel" href={baseShopUrl} target="_blank" rel="noreferrer">
+            <p>Visit online shop ↗</p>
+          </a>
+        )}
       </section>
 
       <section className="content-section profile-section" id="profile">

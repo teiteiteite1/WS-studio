@@ -368,6 +368,50 @@ footer a:hover { opacity: .46; }
 .social-links i { font-size: 20px; font-style: normal; }
 
 .shop-section { background: #f8faf9; }
+.shop-grid {
+  margin-top: clamp(58px, 7vw, 96px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 58px) clamp(8px, 2vw, 24px);
+}
+.shop-card { min-width: 0; }
+.shop-card > a { display: block; }
+.shop-image {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(11,26,34,.06);
+  border-radius: clamp(18px, 2.2vw, 32px);
+  background: #e2eaeb;
+  box-shadow: 0 16px 42px rgba(34,60,68,.08);
+}
+.shop-image img {
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(.2,.75,.25,1), filter 250ms ease;
+}
+.shop-card:hover .shop-image img { transform: scale(1.025); filter: brightness(.94); }
+.shop-meta {
+  padding: 17px 3px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.shop-meta h3 {
+  margin: 0;
+  min-width: 0;
+  font-size: clamp(13px, 1.2vw, 17px);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.4;
+}
+.shop-meta p {
+  margin: 2px 0 0;
+  color: #6a7e84;
+  font-size: 11px;
+  font-weight: 550;
+  white-space: nowrap;
+}
 .shop-panel {
   min-height: clamp(280px, 32vw, 440px);
   margin-top: 72px;
@@ -652,6 +696,11 @@ footer > a:last-child { justify-self: end; }
   .social-links span:nth-child(2) { grid-column: 1; grid-row: 2; }
   .social-links i { grid-column: 2; grid-row: 1 / span 2; }
   .shop-panel { min-height: 260px; margin-top: 52px; padding: 26px; }
+  .shop-grid { margin-top: 48px; gap: 24px 6px; }
+  .shop-image { border-radius: 15px; }
+  .shop-meta { padding: 10px 2px 0; display: block; }
+  .shop-meta h3 { overflow: hidden; font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+  .shop-meta p { margin-top: 4px; font-size: 9px; }
   .profile-grid { margin-top: 52px; grid-template-columns: 1fr; gap: 62px; }
   .profile-image { border-radius: 24px; }
   .profile-card h3 { margin-top: 18px; font-size: 28px; }
