@@ -206,8 +206,11 @@ export default async function Home() {
         <SectionTitle title="News" />
         <div className="news-list">
           <article><span className="news-date">Coming soon...</span><p>社不ちゃんに何やら動きがあるようだ</p></article>
-          <article><span className="news-date">Coming soon...</span><p>AI音楽コンピレーションアルバム「Now Generating」作成中</p></article>
           <article><time dateTime="2026-09-12">2026.9.12–13</time><p>Send AI Art Exhibitionにて展示 @仙台</p></article>
+          <article>
+            <time dateTime="2026-08-06">2026.8.6</time>
+            <p>AI音楽コンピレーションアルバム「<a href="https://wsstudiotei.base.shop/items/152969255" target="_blank" rel="noreferrer">Now Generating</a>」発売</p>
+          </article>
           <article>
             <time dateTime="2026-07-25">2026.7.25</time>
             <p><a href="https://tosu-designer.com/ai-fusion/" target="_blank" rel="noreferrer">AI FUSION FES</a>にて展示 @渋谷</p>
