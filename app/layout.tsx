@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import MusicPlayerProvider from "./MusicPlayerProvider";
 import "./globals.css";
+import "./engagement.css";
 
 const siteUrl = "https://ws-studio-wheat.vercel.app";
 
@@ -95,7 +98,11 @@ export default function RootLayout({
             __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        {children}
+        <MusicPlayerProvider>{children}</MusicPlayerProvider>
+        <Script id="vercel-analytics-init" strategy="afterInteractive">
+          {`window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };`}
+        </Script>
+        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
       </body>
     </html>
   );
