@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useMusicPlayer } from "./MusicPlayerProvider";
 
 export type MusicTrack = {
   title: string;
@@ -31,48 +32,22 @@ export default function MusicGrid({
   limit?: number;
 }) {
   const [visibleTracks, setVisibleTracks] = useState(() => tracks.slice(0, limit));
-  const [activeTrack, setActiveTrack] = useState<number | null>(null);
-  const audioRefs = useRef<Array<HTMLAudioElement | null>>([]);
+  const { activeTrack, isPlaying, playTrack } = useMusicPlayer();
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       const nextTracks = randomize ? shuffleTracks(tracks) : [...tracks];
       setVisibleTracks(nextTracks.slice(0, limit));
-      setActiveTrack(null);
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, [tracks, limit, randomize]);
 
-  async function toggleTrack(index: number) {
-    const selected = audioRefs.current[index];
-    if (!selected) return;
-
-    if (activeTrack === index && !selected.paused) {
-      selected.pause();
-      setActiveTrack(null);
-      return;
-    }
-
-    audioRefs.current.forEach((audio, audioIndex) => {
-      if (audio && audioIndex !== index) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-
-    try {
-      await selected.play();
-      setActiveTrack(index);
-    } catch {
-      setActiveTrack(null);
-    }
-  }
-
   return (
     <div className="music-grid">
-      {visibleTracks.map((track, index) => {
-        const isPlaying = activeTrack === index;
+      {visibleTracks.map((track) => {
+        const isActive = activeTrack?.spotifyUrl === track.spotifyUrl;
+        const trackIsPlaying = isActive && isPlaying;
 
         return (
           <article className="music-card" key={track.spotifyUrl}>
@@ -93,10 +68,10 @@ export default function MusicGrid({
               <button
                 className="music-play"
                 type="button"
-                onClick={() => toggleTrack(index)}
-                aria-label={isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
+                onClick={() => playTrack(track, tracks)}
+                aria-label={trackIsPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
               >
-                {isPlaying ? (
+                {trackIsPlaying ? (
                   <span className="pause-icon" aria-hidden="true">
                     <i />
                     <i />
@@ -105,14 +80,6 @@ export default function MusicGrid({
                   <span className="play-icon" aria-hidden="true" />
                 )}
               </button>
-              <audio
-                ref={(element) => {
-                  audioRefs.current[index] = element;
-                }}
-                src={track.previewUrl}
-                preload="none"
-                onEnded={() => setActiveTrack(null)}
-              />
             </div>
             <div className="music-meta">
               <h3>{track.title}</h3>
