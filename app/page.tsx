@@ -36,10 +36,7 @@ async function getBaseProducts(): Promise<ShopProduct[]> {
       const image = decodeXml(card.match(/<img[\s\S]*?src=["']([^"']+)["']/i)?.[1] ?? "");
       const title = stripHtml(card.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i)?.[1] ?? "");
       const price = stripHtml(card.match(/<p\s+class=["']price["'][^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "");
-      try {
-        const productUrl = new URL(url); const imageUrl = new URL(image);
-        if (productUrl.hostname !== "wsstudiotei.base.shop" || imageUrl.hostname !== "baseec-img-mng.akamaized.net" || !title) return [];
-      } catch { return []; }
+      try { const productUrl = new URL(url); const imageUrl = new URL(image); if (productUrl.hostname !== "wsstudiotei.base.shop" || imageUrl.hostname !== "baseec-img-mng.akamaized.net" || !title) return []; } catch { return []; }
       return [{ title, price, image, url }];
     });
   } catch { return []; }
@@ -52,8 +49,7 @@ async function getLatestNoteArticles(): Promise<NoteArticle[]> {
     const xml = await response.text();
     const items = xml.match(/<item>[\s\S]*?<\/item>/gi) ?? [];
     return items.slice(0, 3).flatMap((item) => {
-      const title = decodeXml(rssTag(item, "title"));
-      const url = decodeXml(rssTag(item, "link"));
+      const title = decodeXml(rssTag(item, "title")); const url = decodeXml(rssTag(item, "link"));
       const description = decodeXml(rssTag(item, "description").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")).replace(/続きをみる\s*$/u, "").trim();
       return title && url ? [{ title, description, url }] : [];
     });
@@ -67,17 +63,14 @@ export default async function Home() {
       <SiteHeader />
       <section className="hero" id="top" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <p className="eyebrow">Creative studio / Japan</p>
+          <p className="eyebrow">AI IMAGE / AI ART / GENERATIVE AI / JAPAN</p>
           <div className="hero-title-row">
             <h1 id="hero-title"><Logo hero /></h1>
-            <p className="hero-statement"><span>当studioではAIと共作でイラスト、動画、音楽、キャラクターを作成しております。</span><span>依頼は随時受け付けておりますので、下記CONTACTフォームまたはXのDMにてご連絡ください。</span></p>
+            <p className="hero-statement"><span>WS studioは生成AIとの共作で、AI画像・AIイラスト・映像・AI音楽・キャラクターを制作するクリエイティブスタジオです。</span><span>作品制作・コラボレーションのご依頼は、下記CONTACTフォームまたはXのDMより受け付けています。</span></p>
           </div>
-          <div className="hero-intro-row">
-            <p className="hero-intro">Illustration&nbsp;&nbsp; Music&nbsp;&nbsp; Film&nbsp;&nbsp; Character</p>
-            <QuickSocialLinks />
-          </div>
+          <div className="hero-intro-row"><p className="hero-intro">AI Illustration&nbsp;&nbsp; Film&nbsp;&nbsp; AI Music&nbsp;&nbsp; Character</p><QuickSocialLinks /></div>
         </div>
-        <div className="hero-visual"><Image src="/works/angel-green.jpg" alt="A winged girl in soft blue light" fill unoptimized priority sizes="(max-width: 760px) 100vw, 94vw" /><div className="hero-wash" /></div>
+        <div className="hero-visual"><Image src="/works/angel-green.jpg" alt="青い光と翼をモチーフにしたWS studioのAIイラスト・AIアート作品" fill unoptimized priority sizes="(max-width: 760px) 100vw, 94vw" /><div className="hero-wash" /></div>
       </section>
 
       <section className="content-section gallery-section" id="gallery"><div className="section-title-row"><SectionTitle title="Gallery" /><Link className="section-link" href="/gallery">More →</Link></div><GalleryGrid items={galleryItems} randomize limit={6} /></section>
