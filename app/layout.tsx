@@ -10,11 +10,11 @@ const siteUrl = "https://ws-studio-wheat.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "WS studio / てい | AIアート・映像・音楽・キャラクター制作",
-    template: "%s | WS studio / てい",
+    default: "てい / WS studio | AI Art, Music & Movie",
+    template: "%s | てい / WS studio",
   },
   description:
-    "WS studioは、ていが主宰する日本のクリエイティブスタジオ。生成AIとの共作によるAIアート・AIイラスト、映像、AI音楽、キャラクター作品を制作・発表しています。作品、音楽、活動情報、制作・コラボレーションの窓口を掲載しています。",
+    "てい / WS studioの公式サイト。生成AIとの共作によるAIアート・AIイラスト、映像、AI音楽、キャラクター作品を制作・発表。作品ギャラリー、楽曲試聴、活動情報、制作・コラボレーションのお問い合わせを掲載しています。",
   keywords: [
     "WS studio",
     "てい",
@@ -38,21 +38,21 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     url: siteUrl,
     siteName: "WS studio",
-    title: "WS studio / てい | AIアート・映像・音楽・キャラクター制作",
+    title: "てい / WS studio | AI Art, Music & Movie",
     description:
       "ていが主宰するWS studio。生成AIとの共作によるAIアート、映像、AI音楽、キャラクター作品を制作・発表しています。",
     images: [
       {
         url: "/works/angel-green.jpg",
-        alt: "WS studio / ていのAIアート作品",
+        alt: "てい / WS studioのAIアート作品",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "WS studio / てい | AIアート・映像・音楽・キャラクター制作",
+    title: "てい / WS studio | AI Art, Music & Movie",
     description:
-      "生成AIとの共作によるAIアート、映像、AI音楽、キャラクター作品を制作・発表するWS studio。",
+      "てい / WS studio。生成AIとの共作によるAIアート、映像、AI音楽、キャラクター作品を制作・発表しています。",
     images: ["/works/angel-green.jpg"],
   },
   robots: {
@@ -76,7 +76,7 @@ const structuredData = {
       "@type": "Organization",
       "@id": `${siteUrl}/#organization`,
       name: "WS studio",
-      alternateName: ["WS studio / てい", "WS studio by TEI"],
+      alternateName: ["てい / WS studio", "WS studio by TEI"],
       url: siteUrl,
       foundingDate: "2025-06-04",
       description:
@@ -119,7 +119,7 @@ const structuredData = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       name: "WS studio",
-      alternateName: "WS studio / てい",
+      alternateName: "てい / WS studio",
       url: siteUrl,
       inLanguage: "ja",
       publisher: { "@id": `${siteUrl}/#organization` },

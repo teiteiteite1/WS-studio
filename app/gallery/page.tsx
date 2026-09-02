@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "../SiteChrome";
 import { galleryItems } from "../site-data";
 
 export const metadata: Metadata = {
-  title: "AIアート・AIイラスト Gallery | てい",
+  title: "AIアート・AIイラスト Gallery",
   description:
     "てい / WS studioのAIアート・AIイラスト作品ギャラリー。生成AIとの共作で制作したキャラクター、天使、幻想的なビジュアル作品を公開しています。",
   keywords: [

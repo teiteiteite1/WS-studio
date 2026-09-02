@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "../SiteChrome";
 import { musicTracks } from "../site-data";
 
 export const metadata: Metadata = {
-  title: "AI音楽・生成AI Music | てい",
+  title: "AI音楽・生成AI Music",
   description:
     "てい / WS studioのAI音楽・生成AIを活用した楽曲作品。AIシンガーとの共作によるオリジナル音楽を試聴できます。",
   keywords: [
