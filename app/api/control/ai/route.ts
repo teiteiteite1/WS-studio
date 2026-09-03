@@ -31,6 +31,14 @@ const splitSchema = {
   } } }, required: ["parts"],
 };
 
+class OpenAIRequestError extends Error {
+  status: number;
+  code: string;
+  constructor(message: string, status: number, code = "") {
+    super(message); this.status = status; this.code = code;
+  }
+}
+
 function chars(s: string) { return Array.from(s || "").length; }
 function trimChars(s: string, n: number) { return chars(s) <= n ? s : Array.from(s).slice(0, Math.max(0, n - 1)).join("").trimEnd() + "…"; }
 
@@ -47,7 +55,7 @@ function parseJSON(text: string) {
   try { return JSON.parse(clean); } catch {
     const a = clean.indexOf("{"), b = clean.lastIndexOf("}");
     if (a >= 0 && b > a) return JSON.parse(clean.slice(a, b + 1));
-    throw new Error("AIの返答をJSONとして読み取れませんでした。");
+    throw new Error("AIの返答をJSONとして読み取れませんでした。もう一度実行してください。");
   }
 }
 function sourcesFrom(data: any) {
@@ -61,21 +69,57 @@ function sourcesFrom(data: any) {
   return [...urls].slice(0, 12);
 }
 
-async function ask(opts: { key: string; model: string; instructions: string; input: string; schema: any; name: string; web?: "medium" | "high"; effort?: "low" | "medium" | "high" }) {
-  const body: any = {
-    model: opts.model, store: false, instructions: opts.instructions, input: opts.input,
-    reasoning: { effort: opts.effort || "low" },
-    text: { format: { type: "json_schema", name: opts.name, strict: true, schema: opts.schema } },
-  };
-  if (opts.web) { body.tools = [{ type: "web_search", search_context_size: opts.web }]; body.include = ["web_search_call.action.sources"]; }
+function friendlyOpenAIError(status: number, data: any) {
+  const code = String(data?.error?.code || data?.error?.type || "");
+  const raw = String(data?.error?.message || `OpenAI API error (${status})`);
+  if (status === 401 || /invalid_api_key|incorrect api key/i.test(`${code} ${raw}`)) return "APIキーが無効です。OpenAI Platformで新しいSecret keyを作成して貼り直してください。";
+  if (/credit_balance_exhausted|insufficient_quota|spend_limit|usage_limit/i.test(`${code} ${raw}`)) return "OpenAI APIの残高または利用上限に達しています。ChatGPT Plusとは別なので、OpenAI PlatformのBilling / Limitsを確認してください。";
+  if (status === 429) return "OpenAI APIのレート制限に達しました。少し待ってから再実行してください。";
+  if (status === 403) return "このAPIキーでは要求したモデルまたは機能を利用できません。OpenAI PlatformのProject権限・モデル利用設定を確認してください。";
+  if (status === 404 && /model/i.test(raw)) return "指定モデルをこのAPI Projectから利用できません。Economy（Luna）へ切り替えて再試行してください。";
+  return raw;
+}
+
+async function postOpenAI(key: string, body: any) {
   const r = await fetch("https://api.openai.com/v1/responses", {
     method: "POST", cache: "no-store",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${opts.key}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
   });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data?.error?.message || `OpenAI API error (${r.status})`);
-  return { json: parseJSON(textFrom(data)), sources: sourcesFrom(data) };
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new OpenAIRequestError(friendlyOpenAIError(r.status, data), r.status, String(data?.error?.code || data?.error?.type || ""));
+  return data;
+}
+
+async function askOnce(opts: { key: string; model: string; instructions: string; input: string; schema: any; name: string; web?: "medium" | "high"; effort?: "low" | "medium" | "high" }, structured = true) {
+  const body: any = {
+    model: opts.model,
+    store: false,
+    instructions: structured ? opts.instructions : `${opts.instructions}\n\nReturn ONLY valid JSON matching this schema: ${JSON.stringify(opts.schema)}`,
+    input: opts.input,
+    reasoning: { effort: opts.effort || "low" },
+  };
+  if (structured) body.text = { format: { type: "json_schema", name: opts.name, strict: true, schema: opts.schema } };
+  if (opts.web) {
+    body.tools = [{ type: "web_search", search_context_size: opts.web }];
+    body.include = ["web_search_call.action.sources"];
+  }
+  const data = await postOpenAI(opts.key, body);
+  return { json: parseJSON(textFrom(data)), sources: sourcesFrom(data), model: opts.model };
+}
+
+async function ask(opts: { key: string; model: string; instructions: string; input: string; schema: any; name: string; web?: "medium" | "high"; effort?: "low" | "medium" | "high" }) {
+  try {
+    return await askOnce(opts, true);
+  } catch (e) {
+    if (e instanceof OpenAIRequestError && e.status === 400) return await askOnce(opts, false);
+    if (e instanceof OpenAIRequestError && (e.status === 403 || e.status === 404) && opts.model !== MODELS.economy) {
+      const fallback = { ...opts, model: MODELS.economy };
+      try { return await askOnce(fallback, true); }
+      catch (e2) { if (e2 instanceof OpenAIRequestError && e2.status === 400) return await askOnce(fallback, false); throw e2; }
+    }
+    throw e;
+  }
 }
 
 function guide(model: string) {
@@ -94,13 +138,18 @@ export async function POST(req: Request) {
     const tier: Tier = ["economy", "standard", "deep"].includes(p.tier) ? p.tier : "standard";
     const model = MODELS[tier];
 
+    if (action === "connection_test") {
+      const data = await postOpenAI(key, { model: MODELS.economy, store: false, input: "Reply with exactly OK.", max_output_tokens: 16 });
+      return NextResponse.json({ ok: true, model: data?.model || MODELS.economy });
+    }
+
     if (action === "scenario_draft") {
       const mode = String(p.researchMode || "ai");
       const web = mode === "deep" ? "high" : mode === "web" ? "medium" : undefined;
       const result = await ask({ key, model, web, effort: mode === "deep" ? "high" : "low", name: "scenario_draft", schema: draftSchema,
         instructions: `あなたは30〜60秒ショート動画のシナリオ作家兼リサーチャー。日本語で自然なオリジナル台本を作る。Web検索時はネット上のあるある・体験談から一般化できる構造だけを抽出し、固有の文章や珍しい出来事を転載しない。複数傾向を組み替える。キャラ設定は創作文脈として使うが説明を羅列しない。冒頭数秒で状況を示し、行動と短い会話で進め、最後に明確な着地を作る。AI動画プロンプト文法や@imageは入れない。`,
         input: `キャラクター:\n${JSON.stringify(p.character || {}, null, 2)}\n\nテーマ:${p.topic || "社不っぽい日常"}\n目標尺:${p.duration || 45}秒\nトーン:${p.tone || "日常コメディ"}\n追加:${p.notes || "なし"}\n\n好評例:\n${(p.likedExamples || []).slice(-4).join("\n---\n") || "なし"}\n\n避けたい例:\n${(p.rejectedExamples || []).slice(-3).join("\n---\n") || "なし"}\n\ndraftはそのまま人が推敲できる台本。research_notesは材料にした一般傾向を短く。hooksは別導入案を3つ以内。` });
-      return NextResponse.json({ ...result.json, sources: result.sources, model });
+      return NextResponse.json({ ...result.json, sources: result.sources, model: result.model });
     }
 
     if (action === "scenario_split") {
@@ -108,7 +157,7 @@ export async function POST(req: Request) {
       const result = await ask({ key, model, name: "scenario_split", schema: splitSchema,
         instructions: `短編台本を自然な場面の切れ目で${count}パートに分割する。各パートは後で動画生成Prompt Builderへ入る。日本語シナリオ記述のままにし、重要なセリフやオチを削らない。各パート単独でも状況が分かる最小限の補足は可。partsは必ず${count}件。`,
         input: `タイトル:${p.title || "無題"}\n\n草稿:\n${p.draft || ""}` });
-      return NextResponse.json({ parts: result.json.parts || [], model });
+      return NextResponse.json({ parts: result.json.parts || [], model: result.model });
     }
 
     if (action === "prompt_build") {
@@ -125,7 +174,7 @@ export async function POST(req: Request) {
           input: `EN:\n${english}\n\nJA:\n${japanese}` });
         english = String(compressed.json.english || english); japanese = String(compressed.json.japanese || japanese);
       }
-      return NextResponse.json({ english: trimChars(english, max), japanese: trimChars(japanese, max), model });
+      return NextResponse.json({ english: trimChars(english, max), japanese: trimChars(japanese, max), model: result.model });
     }
 
     if (action === "sync_prompt") {
@@ -135,11 +184,12 @@ export async function POST(req: Request) {
       const result = await ask({ key, model, name: "synced_prompt", schema: promptSchema,
         instructions: `${source === "en" ? "英語" : "日本語"}側を正本として一字も勝手に修正せず、反対言語だけを同じ意味・構造へ同期する。@imageNは同じ位置関係と番号で保持。各言語${max}文字以内。`,
         input: `正本(${source.toUpperCase()}):\n${original}\n\n現在EN:\n${p.english || ""}\n\n現在JA:\n${p.japanese || ""}` });
-      return NextResponse.json({ english: source === "en" ? original : trimChars(String(result.json.english || ""), max), japanese: source === "ja" ? original : trimChars(String(result.json.japanese || ""), max), model });
+      return NextResponse.json({ english: source === "en" ? original : trimChars(String(result.json.english || ""), max), japanese: source === "ja" ? original : trimChars(String(result.json.japanese || ""), max), model: result.model });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "AI処理に失敗しました。" }, { status: 500 });
+    const status = e instanceof OpenAIRequestError ? Math.min(599, Math.max(400, e.status)) : 500;
+    return NextResponse.json({ error: e instanceof Error ? e.message : "AI処理に失敗しました。" }, { status });
   }
 }
