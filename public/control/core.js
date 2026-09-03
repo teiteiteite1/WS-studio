@@ -23,7 +23,7 @@ function loadJSON(key,fallback){try{return {...fallback,...JSON.parse(localStora
 function saveState(){localStorage.setItem(STATE_KEY,JSON.stringify(state))}
 function saveSettingsLocal(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 const charCount=s=>Array.from(String(s||'')).length;
 const uid=()=>crypto.randomUUID?crypto.randomUUID():'id_'+Date.now()+'_'+Math.random().toString(16).slice(2);
 function activeCharacter(id){return state.characters.find(c=>c.id===id)||state.characters[0]}
@@ -37,8 +37,8 @@ async function putImage(rec){const db=await openDB();return new Promise((resolve
 async function getImage(id){const db=await openDB();return new Promise((resolve,reject)=>{const req=db.transaction(DB_STORE).objectStore(DB_STORE).get(id);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 async function deleteImage(id){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).delete(id);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error)})}
 async function imageUrl(id){const rec=await getImage(id);return rec?.blob?URL.createObjectURL(rec.blob):''}
-async function ai(action,payload){const key=apiKey();if(!key)throw new Error('SettingsでOpenAI APIキーを設定してね。');const res=await fetch('/api/control/ai',{method:'POST',headers:{'Content-Type':'application/json','x-openai-key':key},body:JSON.stringify({action,payload:{...payload,tier:settings.tier||'standard'}})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||`API error ${res.status}`);return data}
-function updateAIState(){const ok=!!apiKey();['aiStateLab','aiStateBuilder','aiStateSettings'].forEach(id=>{const e=$(id);if(!e)return;e.textContent=ok?'AI ready':'API key 未設定';e.className='pill '+(ok?'online':'warn')});$('apiKey').value=apiKey();$('rememberKey').checked=!!localStorage.getItem(KEY_LOCAL)}
+async function ai(action,payload={}){const key=apiKey();if(!key)throw new Error('SettingsでOpenAI APIキーを設定してね。');let res;try{res=await fetch('/api/control/ai',{method:'POST',headers:{'Content-Type':'application/json','x-openai-key':key},body:JSON.stringify({action,payload:{...payload,tier:settings.tier||'standard'}})})}catch(e){throw new Error('CONTROLのAIサーバーへ接続できませんでした。ページを再読み込みしてもう一度試してください。')}const raw=await res.text();let data={};try{data=raw?JSON.parse(raw):{}}catch{throw new Error(`AIサーバーから不正な応答が返りました (HTTP ${res.status})`)}if(!res.ok)throw new Error(data.error||`API error ${res.status}`);return data}
+function updateAIState(verified=false){const ok=!!apiKey();['aiStateLab','aiStateBuilder','aiStateSettings'].forEach(id=>{const e=$(id);if(!e)return;e.textContent=ok?(verified?'AI connected':'API key saved'):'API key 未設定';e.className='pill '+(ok?(verified?'online':'warn'):'warn')});$('apiKey').value=apiKey();$('rememberKey').checked=!!localStorage.getItem(KEY_LOCAL)}
 function renderCharacterSelects(){const options=state.characters.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');['labChar','builderChar'].forEach(id=>{const el=$(id),prev=el.value;el.innerHTML=options;if(state.characters.some(c=>c.id===prev))el.value=prev});if(!$('labChar').value&&state.characters[0])$('labChar').value=state.characters[0].id;if(!$('builderChar').value&&state.characters[0])$('builderChar').value=state.characters[0].id}
 function scenarioContext(c){return{name:c.name,personality:c.personality,speaking_style:c.speaking,world:c.world,recurring_places:c.places,likes_dislikes:c.likes,notes:c.notes}}
 function likedScenarioExamples(){return state.feedback.scenarios.filter(x=>x.rating==='good').slice(-4).map(x=>x.draft)}
