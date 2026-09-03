@@ -2,11 +2,14 @@
 
 import { trackEvent } from "./analytics-client";
 
-type Brand = "x" | "instagram" | "note" | "spotify" | "shop";
+type Brand = "x" | "instagram" | "threads" | "pinterest" | "suno" | "note" | "spotify" | "shop";
 
 const links: Array<{ label: string; href: string; brand: Brand }> = [
   { label: "X", href: "https://x.com/WABISABI_pomo", brand: "x" },
   { label: "Instagram", href: "https://www.instagram.com/teiteite1tei", brand: "instagram" },
+  { label: "Threads", href: "https://www.threads.com/@teiteite1tei", brand: "threads" },
+  { label: "Pinterest", href: "https://www.pinterest.com/teiwsstudio/", brand: "pinterest" },
+  { label: "SUNO", href: "https://suno.com/@teiteiteitei", brand: "suno" },
   { label: "note", href: "https://note.com/teiteiteite1", brand: "note" },
   { label: "Spotify", href: "https://open.spotify.com/search/WS%20studio", brand: "spotify" },
   { label: "Shop", href: "https://wsstudiotei.base.shop/", brand: "shop" },
@@ -29,6 +32,21 @@ function BrandIcon({ brand }: { brand: Brand }) {
         <circle cx="17.45" cy="6.75" r="1.25" fill="currentColor" />
       </svg>
     );
+  }
+
+  if (brand === "threads") {
+    // Brand glyph from Simple Icons (CC0), based on the official brand artwork.
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z" /></svg>;
+  }
+
+  if (brand === "pinterest") {
+    // Brand glyph from Simple Icons (CC0), based on the official brand artwork.
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z" /></svg>;
+  }
+
+  if (brand === "suno") {
+    // Brand glyph from Simple Icons (CC0), based on the official brand artwork.
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.5 0C20.642 0 24 5.373 24 12h-9c0 6.627-3.358 12-7.5 12C3.358 24 0 18.627 0 12h9c0-6.627 3.358-12 7.5-12Z" /></svg>;
   }
 
   if (brand === "spotify") {
@@ -62,9 +80,9 @@ export default function QuickSocialLinks() {
   return (
     <>
       <style>{`
-        .hero-intro-row { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:28px; }
+        .hero-intro-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; margin-top:28px; }
         .hero-intro-row .hero-intro { margin:0; }
-        .hero-social-quick { display:flex; align-items:center; gap:9px; }
+        .hero-social-quick { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
         .hero-social-quick a { width:36px; height:36px; display:grid; place-items:center; border:1px solid rgba(11,26,34,.12); border-radius:50%; background:rgba(248,250,249,.7); color:#526970; transition:transform 180ms ease, opacity 180ms ease, background 180ms ease, color 180ms ease; }
         .hero-social-quick a:hover { transform:translateY(-2px); color:#243c45; background:#fff; }
         .hero-social-quick svg { width:17px; height:17px; display:block; }

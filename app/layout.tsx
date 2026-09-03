@@ -93,6 +93,8 @@ const structuredData = {
       sameAs: [
         "https://x.com/WABISABI_pomo",
         "https://www.instagram.com/teiteite1tei",
+        "https://www.threads.com/@teiteite1tei",
+        "https://www.pinterest.com/teiwsstudio/",
         "https://open.spotify.com/intl-ja/artist/5sZuyjE2PdlFgWLkJjpYPf",
         "https://suno.com/@teiteiteitei",
         "https://note.com/teiteiteite1",
@@ -112,6 +114,8 @@ const structuredData = {
       sameAs: [
         "https://x.com/WABISABI_pomo",
         "https://www.instagram.com/teiteite1tei",
+        "https://www.threads.com/@teiteite1tei",
+        "https://www.pinterest.com/teiwsstudio/",
         "https://note.com/teiteiteite1",
       ],
     },

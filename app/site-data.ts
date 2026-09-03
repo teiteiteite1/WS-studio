@@ -1,7 +1,7 @@
 import type { MusicTrack } from "./MusicGrid";
 
 export const navigation = [
-  ["TOP", "/#top"], ["GALLERY", "/#gallery"], ["MUSIC", "/#music"], ["SNS", "/#sns"], ["SHOP", "/#shop"], ["PROFILE", "/#profile"], ["NEWS", "/#news"], ["JOURNAL", "/#journal"], ["CONTACT", "/#contact"],
+  ["TOP", "/#top"], ["GALLERY", "/#gallery"], ["MUSIC", "/#music"], ["SHOP", "/#shop"], ["PROFILE", "/#profile"], ["NEWS", "/#news"], ["JOURNAL", "/#journal"], ["LINK", "/#link"], ["CONTACT", "/#contact"],
 ] as const;
 
 export const galleryItems = [

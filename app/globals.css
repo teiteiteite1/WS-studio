@@ -351,10 +351,10 @@ footer a:hover { opacity: .46; }
   white-space: nowrap;
 }
 
-.sns-section { background: #f8faf9; }
-.social-links { margin-top: 80px; border-top: 1px solid var(--line); }
+.link-section { background: #f8faf9; }
+.social-links { margin-top: 64px; border-top: 1px solid var(--line); }
 .social-links a {
-  padding: 30px 4px;
+  padding: 24px 4px;
   display: grid;
   grid-template-columns: 180px 1fr auto;
   align-items: center;
@@ -363,7 +363,7 @@ footer a:hover { opacity: .46; }
   transition: padding 220ms ease, opacity 180ms ease;
 }
 .social-links a:hover { padding-left: 18px; opacity: .62; }
-.social-links span:first-child { font-size: clamp(22px, 3vw, 40px); font-weight: 450; letter-spacing: -.055em; }
+.social-links span:first-child { font-size: clamp(20px, 2.3vw, 30px); font-weight: 450; letter-spacing: -.055em; }
 .social-links span:nth-child(2) { color: #6a7e84; font-size: 12px; letter-spacing: .03em; }
 .social-links i { font-size: 20px; font-style: normal; }
 
@@ -692,7 +692,7 @@ footer > a:last-child { justify-self: end; }
   .music-meta { padding: 15px 3px 0; }
   .music-meta h3 { font-size: 16px; }
   .social-links { margin-top: 54px; }
-  .social-links a { padding: 24px 7px; grid-template-columns: 1fr auto; gap: 8px; }
+  .social-links a { padding: 20px 7px; grid-template-columns: 1fr auto; gap: 8px; }
   .social-links span:nth-child(2) { grid-column: 1; grid-row: 2; }
   .social-links i { grid-column: 2; grid-row: 1 / span 2; }
   .shop-panel { min-height: 260px; margin-top: 52px; padding: 26px; }
