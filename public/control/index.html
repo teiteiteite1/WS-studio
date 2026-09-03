@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>WS studio CONTROL</title>
+<link rel="stylesheet" href="/control/style.css">
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">WS studio CONTROL<small>CREATIVE WORKFLOW</small></div>
+  <div class="nav">
+    <button class="on" data-view="lab">Scenario Lab</button>
+    <button data-view="builder">Prompt Builder</button>
+    <button data-view="characters">Characters</button>
+    <button data-view="settings">Settings</button>
+  </div>
+  <div class="side-foot">Internal tool · data stays in this browser</div>
+</aside>
+<main>
+<section id="lab" class="view on">
+  <div class="top"><div><h1>Scenario Lab</h1><div class="sub">ネタ探しから草稿、2〜3分割まで。まず「人が読んで面白い台本」を作る。</div></div><span id="aiStateLab" class="pill warn">API key 未設定</span></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="head"><h2>Idea & Research</h2><span class="pill">30–60 sec</span></div>
+      <label>Character</label><select id="labChar"></select>
+      <label>Theme / seed</label><textarea id="labTopic" placeholder="例：社不っぽいバイトの失敗。シフトを勘違いして、安心した直後に詰む。"></textarea>
+      <div class="row">
+        <div><label>Length</label><select id="labDuration"><option value="30">30 sec</option><option value="45" selected>45 sec</option><option value="60">60 sec</option></select></div>
+        <div><label>Tone</label><select id="labTone"><option>日常コメディ</option><option>シュール</option><option>強いオチ</option><option>ちょいエモ</option><option>乾いたブラックユーモア</option></select></div>
+      </div>
+      <label>Research</label><div class="segment" id="researchSegment"><button data-mode="ai" class="on">AI only</button><button data-mode="web">Web + AI</button><button data-mode="deep">Deep web</button></div>
+      <label>Additional notes</label><textarea id="labNotes" placeholder="例：ネットミームっぽくしすぎない。社不ちゃん本人は真顔寄り。"></textarea>
+      <button id="makeDraft" class="btn black" style="width:100%;margin-top:12px">Research & Draft</button>
+      <div id="labStatus" class="status">テーマを入れて開始。</div>
+      <div style="margin-top:14px" class="locked">Web検索は体験談をそのままコピーせず、共通する「あるある」や失敗パターンだけを抽出してオリジナル化する。</div>
+    </div>
+    <div class="card">
+      <div class="head"><h2>Draft</h2><div class="row auto"><button class="btn ghost small" data-expand="draft">拡大</button><button id="copyDraft" class="btn ghost small">Copy</button></div></div>
+      <label>Title</label><input id="draftTitle" />
+      <textarea id="draft" class="draft" placeholder="草稿がここに出ます。生成後は自由に直接修正できます。"></textarea>
+      <div class="row" style="margin-top:10px"><button id="draftGood" class="btn good">★ Keep</button><button id="draftReject" class="btn bad">Reject</button></div>
+      <label>Split</label><div class="row"><div class="segment" id="splitSegment"><button data-count="2" class="on">2 parts</button><button data-count="3">3 parts</button></div><button id="splitDraft" class="btn black">Split draft</button></div>
+      <div id="splitStatus" class="status">草稿を確認してから分割。</div>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Research notes</h3><div id="researchNotes" class="small muted">まだありません。</div><div id="hooks" style="margin-top:10px"></div><div id="sources" class="sources" style="margin-top:12px"></div></div>
+    <div class="card"><div class="head"><h3>Parts</h3><span id="partsCount" class="pill">0</span></div><div id="parts" class="parts"><div class="muted small">分割するとここにPartが並びます。</div></div></div>
+  </div>
+</section>
+
+<section id="builder" class="view">
+  <div class="top"><div><h1>Prompt Builder</h1><div class="sub">H3 / Seedance / Kling。英語が本命、日本語を横で確認・修正。</div></div><span id="aiStateBuilder" class="pill warn">API key 未設定</span></div>
+  <div class="grid g3">
+    <div class="card">
+      <h2>Input</h2>
+      <label>Character</label><select id="builderChar"></select>
+      <div class="row"><div><label>Model</label><select id="videoModel"><option>H3</option><option>Seedance</option><option>Kling</option></select></div><div><label>Internal duration</label><select id="builderDuration"><option value="5">5 sec</option><option value="10">10 sec</option><option value="15" selected>15 sec</option><option value="30">30 sec</option></select></div></div>
+      <label>Max prompt length <span id="maxCharsLabel" class="mono">7000</span></label><input id="maxChars" type="range" min="1000" max="25000" step="100" value="7000" />
+      <div class="head" style="margin-top:13px"><label style="margin:0">Scenario</label><button class="btn ghost small" data-expand="scenario">拡大</button></div>
+      <textarea id="scenario" placeholder="Scenario Labから送るか、ここへ直接入力。参照画像を選ぶとカーソル位置に @image1 が入ります。"></textarea>
+      <div class="head" style="margin-top:13px"><label style="margin:0">Extra direction</label><button class="btn ghost small" data-expand="direction">拡大</button></div>
+      <textarea id="direction" placeholder="例：棒読みを避ける。冒頭の間を短く。手持ち感は弱め。"></textarea>
+      <button id="buildPrompt" class="btn black" style="width:100%;margin-top:12px">Build prompt</button>
+      <div id="builderStatus" class="status">シナリオを入力して開始。</div>
+      <div class="locked" style="margin-top:12px">固定：BGMなし · 文字/字幕/テロップなし · 実在の商品/店/ブランド/ロゴなし</div>
+    </div>
+    <div class="card">
+      <div class="head"><h2>English Prompt</h2><div class="row auto"><span id="enCount" class="pill count mono">0 / 7000</span><button class="btn ghost small" data-expand="promptEn">拡大</button><button id="copyEn" class="btn ghost small">Copy</button></div></div>
+      <textarea id="promptEn" class="large"></textarea><button id="syncEn" class="btn" style="width:100%;margin-top:8px">English → 日本語に同期</button>
+    </div>
+    <div class="card">
+      <div class="head"><h2>日本語</h2><div class="row auto"><span id="jaCount" class="pill count mono">0 / 7000</span><button class="btn ghost small" data-expand="promptJa">拡大</button><button id="copyJa" class="btn ghost small">Copy</button></div></div>
+      <textarea id="promptJa" class="large"></textarea><button id="syncJa" class="btn" style="width:100%;margin-top:8px">日本語 → Englishに同期</button>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><div class="head"><h3>Reference images</h3><div class="row auto"><span id="refSelectedCount" class="pill">0 selected</span><button id="clearBuilderRefs" class="btn ghost small">Clear</button></div></div><div id="builderRefs" class="refs"></div><div class="note">選択順に @image1, @image2… を採番。選択した瞬間にScenarioのカーソル位置へ追加。</div></div>
+    <div class="card"><h3>Result feedback</h3><div class="row" style="margin-top:10px"><button id="promptGood" class="btn good">★ Good</button><button id="promptHold" class="btn">Hold</button><button id="promptBad" class="btn bad">NG</button></div><div id="promptHistory" class="feedback-list" style="margin-top:12px"></div></div>
+  </div>
+</section>
+
+<section id="characters" class="view">
+  <div class="top"><div><h1>Characters</h1><div class="sub">AppearanceとVoiceはPrompt Builderへ必須。その他の設定はScenario Labの創作コンテキスト。</div></div><button id="newCharacter" class="btn black">+ Character</button></div>
+  <div id="characterGrid" class="char-grid"></div>
+  <div id="characterEditor" class="card" style="display:none;margin-top:16px">
+    <div class="head"><h2 id="editorName">Character</h2><div class="row auto"><button id="deleteCharacter" class="btn ghost small">Delete</button><button id="saveCharacter" class="btn black small">Save</button></div></div>
+    <div class="grid g2"><div>
+      <label>Name</label><input id="cName" />
+      <label>Appearance prompt <span class="pill">Prompt必須</span></label><textarea id="cAppearance"></textarea>
+      <label>Voice prompt <span class="pill">Prompt必須</span></label><textarea id="cVoice"></textarea>
+      <label>Personality</label><textarea id="cPersonality"></textarea><label>Speaking style</label><textarea id="cSpeaking"></textarea>
+      <label>World / home</label><textarea id="cWorld"></textarea><label>Places / recurring locations</label><textarea id="cPlaces"></textarea>
+      <label>Likes / dislikes</label><textarea id="cLikes"></textarea><label>Other notes</label><textarea id="cNotes"></textarea>
+    </div><div>
+      <div class="head"><h3>Reference materials</h3><span id="charRefCount" class="pill">0</span></div>
+      <div id="dropZone" class="drop">画像をドラッグ＆ドロップ<br><span class="small">またはクリックして追加</span><input id="fileInput" type="file" accept="image/*" multiple hidden /></div>
+      <label>Tag for selected upload</label><input id="uploadTag" placeholder="例：正面 / 普段着 / 部屋 / 表情" />
+      <div id="charRefs" class="refs" style="margin-top:12px"></div><div class="note">画像本体はブラウザのIndexedDBに保存。ページを更新しても残ります。</div>
+    </div></div>
+  </div>
+</section>
+
+<section id="settings" class="view">
+  <div class="top"><div><h1>Settings</h1><div class="sub">APIキーはWS studio側には保存しない。通常はこのタブの間だけ保持。</div></div><span id="aiStateSettings" class="pill warn">API key 未設定</span></div>
+  <div class="grid g2"><div class="card">
+    <h2>OpenAI</h2><label>API key</label><input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+    <div class="row" style="margin-top:9px"><label style="margin:0;text-transform:none;letter-spacing:0;font-weight:650"><input id="rememberKey" type="checkbox" style="width:auto;margin-right:7px" />この端末に保存する</label><button id="saveApiKey" class="btn black">Save key</button></div>
+    <div class="note">未チェックならsessionStorageのみ。チェック時だけlocalStorageへ保存。リクエスト時に一時的にサーバー経由でOpenAIへ送り、WS studio側には保存しません。</div>
+    <label>AI quality / cost</label><select id="aiTier"><option value="economy">Economy · Luna</option><option value="standard" selected>Standard · Terra</option><option value="deep">Deep · Sol</option></select>
+    <label>Default video model</label><select id="defaultVideoModel"><option>H3</option><option>Seedance</option><option>Kling</option></select>
+    <button id="saveSettings" class="btn black" style="width:100%;margin-top:12px">Save settings</button><div id="settingsStatus" class="status">設定を保存できます。</div>
+  </div><div class="card">
+    <h2>Workflow rules</h2><div class="locked">Prompt Builder：Appearance + Voiceのみ自動注入。他のキャラ設定は勝手に足さない。</div>
+    <div class="locked" style="margin-top:8px">動画Prompt：BGMなし / 画面内文字なし / 実在の商品・店・ブランド・ロゴなし。</div>
+    <div class="locked" style="margin-top:8px">Scenario Lab：Webの体験談はコピーせず、傾向を抽象化してオリジナルへ。</div>
+    <div class="locked" style="margin-top:8px">TopView：生成モデルではなくプラットフォーム。Prompt最適化対象に含めない。</div>
+    <div class="danger-zone"><button id="clearFeedback" class="btn ghost">評価履歴だけ消去</button> <button id="resetAll" class="btn bad">ローカルデータを初期化</button></div>
+  </div></div>
+</section>
+</main></div>
+
+<div id="modal" class="modal"><div id="modalBox" class="modalbox"><div class="modal-main">
+  <div class="modal-head"><b id="modalTitle">Edit</b><div class="row auto"><button id="modalCopy" class="btn ghost small">Copy</button><button id="modalClose" class="btn ghost small">閉じる</button></div></div>
+  <textarea id="modalText"></textarea><button id="modalApply" class="btn black" style="margin-top:10px">反映</button>
+</div><div id="modalSide" class="modal-side"><div class="head"><b>Reference images</b><span id="modalRefCount" class="pill">0</span></div><div id="modalRefs" class="refs"></div><div class="note">Scenario拡大中でも画像を選択できます。</div></div></div></div>
+<script src="/control/app.js" defer></script>
+</body></html>
