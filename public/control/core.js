@@ -23,7 +23,7 @@ function loadJSON(key,fallback){try{return {...fallback,...JSON.parse(localStora
 function saveState(){localStorage.setItem(STATE_KEY,JSON.stringify(state))}
 function saveSettingsLocal(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const charCount=s=>Array.from(String(s||'')).length;
 const uid=()=>crypto.randomUUID?crypto.randomUUID():'id_'+Date.now()+'_'+Math.random().toString(16).slice(2);
 function activeCharacter(id){return state.characters.find(c=>c.id===id)||state.characters[0]}
