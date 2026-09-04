@@ -57,7 +57,7 @@ function syncBibleCharacter(){
   if(!c)return;
   Object.assign(c,{appearance:state.bible.appearance,voice:state.bible.voice,personality:state.bible.personality,speaking:state.bible.speaking,world:state.bible.home,places:state.bible.places,likes:state.bible.likes,notes:[state.bible.profile,state.bible.timeline,state.bible.storyRules].filter(Boolean).join('\n')});
 }
-$('bibleSearch').oninput=renderBible;
+$('bibleSearch').oninput=()=>{collectBible();renderBible()};
 $('saveBible').onclick=()=>{
   collectBible();
   state.bible.version=(Number(state.bible.version)||1)+1;
