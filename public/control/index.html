@@ -15,6 +15,7 @@
     <button class="on" data-view="lab">Scenario Lab</button>
     <button data-view="builder">Prompt Builder</button>
     <button data-view="characters">Characters</button>
+    <button data-view="bible">SHAFU Bible</button>
     <button data-view="settings">Settings</button>
   </div>
   <div class="side-foot">Internal tool · data stays in this browser</div>
@@ -102,6 +103,17 @@
       <div id="charRefs" class="refs" style="margin-top:12px"></div><div class="note">画像本体はブラウザのIndexedDBに保存。ページを更新しても残ります。</div>
     </div></div>
   </div>
+</section>
+
+
+<section id="bible" class="view">
+  <div class="top bible-top">
+    <div><div class="row auto"><span id="bibleVersion" class="pill">CANON v1</span><span id="bibleProgress" class="pill">0 sections</span></div><h1>SHAFU Bible</h1><div class="sub">社不ちゃんの正史・世界・話し方を一か所に。保存するとScenario Labにも同期します。</div></div>
+    <div class="row auto"><button id="copyBible" class="btn ghost">Copy all</button><button id="exportBible" class="btn ghost">Export JSON</button><button id="saveBible" class="btn black">Save Bible</button></div>
+  </div>
+  <div class="bible-tools card"><input id="bibleSearch" type="search" placeholder="設定を検索…" /><span id="bibleUpdated" class="small muted">初期設定</span><button id="resetBible" class="btn ghost small">初期設定へ戻す</button></div>
+  <div id="bibleStatus" class="status">既存の社不ちゃん設定を初期データにしています。</div>
+  <div id="bibleGrid" class="bible-grid"></div>
 </section>
 
 <section id="settings" class="view">
