@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import SyncAccount from "../components/SyncAccount";
-import { getAI30Days, PersonalSession, saveAI30Days } from "../lib/personalSync";
+import { getAI30Days, PersonalSession, saveAI30Days, syncAI30Days } from "../lib/personalSync";
 
 const STORAGE_KEY = "ws-ai30-progress-v1";
 
@@ -51,7 +51,7 @@ export default function LearnSyncBridge() {
       const now = JSON.stringify(days);
       if (now === previous.current) return;
       previous.current = now;
-      void saveAI30Days(session, days).then(() => setStatus("SYNCED")).catch(() => setStatus("SYNC ERROR"));
+      void syncAI30Days(session, days).then(() => setStatus("SYNCED")).catch(() => setStatus("SYNC ERROR"));
     }, 1200);
     return () => window.clearInterval(timer);
   }, [session]);
