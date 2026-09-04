@@ -5,6 +5,15 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-39.webp", alt: "青と橙の抽象的な風景に立つ黒髪の少女を描いたAIイラスト作品" },
+  { src: "/gallery/gallery-40.webp", alt: "屋外の光の中で座る緑色の瞳の白髪天使を描いた生成AIアート" },
+  { src: "/gallery/gallery-41.webp", alt: "階段の影に佇む黒いドレスの白髪少女を描いた幻想的なAIイラスト" },
+  { src: "/gallery/gallery-42.webp", alt: "月のタトゥーと白いドレスをまとった緑色の瞳の白髪少女のAIアート" },
+  { src: "/gallery/gallery-43.webp", alt: "白い背景で横顔を見せる黒髪の少女を描いた繊細な線画風AIイラスト" },
+  { src: "/gallery/gallery-44.webp", alt: "黒いリボンを付けた白髪の少女を都市の抽象表現で描いたAIアート" },
+  { src: "/gallery/gallery-45.webp", alt: "灰色のTシャツとチェック柄スカートを着た黒髪少女の生成AIイラスト" },
+  { src: "/gallery/gallery-46.webp", alt: "都市の路地で白い薔薇を持つ黒髪の天使を描いた幻想的なAIアート" },
+  { src: "/gallery/gallery-47.webp", alt: "夜の森で光る十字架を持つ白髪の天使を描いた青色調のAIイラスト" },
   { src: "/gallery/gallery-19.webp", alt: "WS studioの生成AIアート作品 gallery 19" },
   { src: "/gallery/gallery-20.webp", alt: "WS studioの生成AIアート作品 gallery 20" },
   { src: "/gallery/gallery-21.webp", alt: "WS studioの生成AIアート作品 gallery 21" },
