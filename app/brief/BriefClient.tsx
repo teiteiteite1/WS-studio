@@ -48,7 +48,7 @@ export default function BriefClient(){
               {item.keyResult&&<div className="brief-result"><span>主要結果</span><p>{item.keyResult}</p></div>}
               <div className="brief-conclusion"><span>結論 / CLINICAL BOTTOM LINE</span><p>{item.whyImportant}</p></div>
             </>:<>
-              <div className="brief-paper-section"><span className="brief-paper-label">3分要約</span><p className="brief-news-summary">{item.detailSummary||item.summary}</p></div>
+              <div className="brief-paper-section"><span className="brief-paper-label">3分要約</span><p className="brief-summary">{item.detailSummary||item.summary}</p></div>
               <div className="brief-conclusion"><span>WHY IT MATTERS</span><p>{item.whyImportant}</p></div>
             </>}
             <div className="brief-card-actions"><a href={item.url} target="_blank" rel="noreferrer">{isPaper?"PubMed / 原文を開く ↗":"元ソースを読む ↗"}</a><button type="button" onClick={()=>toggleDetail(item.id)}>閉じる</button></div>
