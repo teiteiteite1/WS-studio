@@ -32,10 +32,7 @@ export function loadSession(): PersonalSession | null {
 async function authRequest(path: string, body: Record<string, unknown>) {
   const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
     method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      "Content-Type": "application/json",
-    },
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const payload = await response.json().catch(() => ({}));
@@ -74,9 +71,7 @@ export async function getValidSession() {
   }
 }
 
-export function signOutLocal() {
-  saveSession(null);
-}
+export function signOutLocal() { saveSession(null); }
 
 async function rest<T>(path: string, session: PersonalSession, init?: RequestInit): Promise<T> {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -125,4 +120,12 @@ export async function saveAI30Days(session: PersonalSession, days: number[]) {
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
     body: JSON.stringify(rows),
   });
+}
+
+export async function syncAI30Days(session: PersonalSession, days: number[]) {
+  const unique = Array.from(new Set(days)).sort((a, b) => a - b);
+  const cloud = await getAI30Days(session);
+  const removed = cloud.filter((day) => !unique.includes(day));
+  await Promise.all(removed.map((day) => rest(`ai30_progress?day=eq.${day}`, session, { method: "DELETE" })));
+  await saveAI30Days(session, unique);
 }
