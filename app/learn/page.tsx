@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LearnClient from "./LearnClient";
+import LearnSyncBridge from "./LearnSyncBridge";
 import "./learn.css";
 
 export const metadata: Metadata = {
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function LearnPage() {
-  return <LearnClient />;
+  return (
+    <>
+      <LearnSyncBridge />
+      <LearnClient />
+    </>
+  );
 }
