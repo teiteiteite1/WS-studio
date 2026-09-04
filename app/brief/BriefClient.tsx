@@ -45,6 +45,7 @@ function persistRead(ids: string[]) {
 export default function BriefClient() {
   const [data, setData] = useState<BriefResponse | null>(null);
   const [readIds, setReadIds] = useState<string[]>([]);
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [session, setSession] = useState<PersonalSession | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [active, setActive] = useState<Category | "all">("all");
@@ -97,6 +98,11 @@ export default function BriefClient() {
       if (session) void saveBriefReadIds(session, [id]).catch(() => setError("既読のクラウド同期に失敗しました。端末には保存済みです。"));
       return next;
     });
+  };
+
+  const togglePaper = (id: string) => {
+    setExpandedIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]);
+    markRead(id);
   };
 
   const markAllRead = () => {
@@ -155,30 +161,68 @@ export default function BriefClient() {
       <section className="brief-list">
         {loading && !data ? <div className="brief-empty">今日の情報を集めています…</div> : visible.length === 0 ? <div className="brief-empty">ここは空っぽ。今日は静かな日です。</div> : visible.map((item) => {
           const isRead = readIds.includes(item.id);
+          const isPaper = item.kind === "PAPER";
+          const expanded = expandedIds.includes(item.id);
           return (
-            <article key={item.id} className={`brief-card ${isRead ? "is-read" : "is-unread"}`}>
+            <article key={item.id} className={`brief-card ${isRead ? "is-read" : "is-unread"} ${isPaper ? "is-paper" : "is-news"} ${expanded ? "is-expanded" : ""}`}>
               <div className="brief-card-topline">
                 <div className="brief-badges">
                   <span className={`brief-importance importance-${item.importance.toLowerCase()}`}>{item.importance}</span>
                   <span className="brief-kind">{item.kind}</span>
                   <span className="brief-category">{labels[item.category]}</span>
-                  {item.studyDesign && <span className="brief-study-design">{item.studyDesign}</span>}
+                  {isPaper && item.studyDesign && <span className="brief-study-design">{item.studyDesign}</span>}
                 </div>
                 {!isRead && <span className="brief-new-dot" aria-label="未読" />}
               </div>
 
-              <h2>{item.title}</h2>
+              {isPaper ? (
+                <button type="button" className="brief-paper-toggle" onClick={() => togglePaper(item.id)} aria-expanded={expanded}>
+                  <span className="brief-paper-title">{item.title}</span>
+                  <span className="brief-paper-chevron">{expanded ? "−" : "+"}</span>
+                </button>
+              ) : (
+                <h2>{item.title}</h2>
+              )}
+
               <div className="brief-meta"><span>{item.source}</span><span>{new Date(item.publishedAt).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo", month: "short", day: "numeric" })}</span></div>
-              {!!item.tags?.length && <div className="brief-tags">{item.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>}
+              {isPaper && !!item.tags?.length && <div className="brief-tags">{item.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>}
 
-              <p className="brief-summary">{item.summary}</p>
-              {item.kind === "PAPER" && item.keyResult && <div className="brief-result"><span>KEY RESULT</span><p>{item.keyResult}</p></div>}
-              <div className="brief-why"><span>WHY IT MATTERS</span><p>{item.whyImportant}</p></div>
+              {!isPaper && (
+                <div className="brief-card-actions brief-news-actions">
+                  <a href={item.url} target="_blank" rel="noreferrer" onClick={() => markRead(item.id)}>ニュースを開く ↗</a>
+                  <button type="button" onClick={() => markRead(item.id)} disabled={isRead}>{isRead ? "既読" : "既読にする"}</button>
+                </div>
+              )}
 
-              <div className="brief-card-actions">
-                <a href={item.url} target="_blank" rel="noreferrer" onClick={() => markRead(item.id)}>原文を開く ↗</a>
-                <button type="button" onClick={() => markRead(item.id)} disabled={isRead}>{isRead ? "既読" : "既読にする"}</button>
-              </div>
+              {isPaper && expanded && (
+                <div className="brief-paper-detail">
+                  <div className="brief-paper-section">
+                    <span className="brief-paper-label">要約</span>
+                    <p className="brief-summary">{item.summary}</p>
+                  </div>
+
+                  {item.keyResult && (
+                    <div className="brief-result">
+                      <span>主要結果</span>
+                      <p>{item.keyResult}</p>
+                    </div>
+                  )}
+
+                  <div className="brief-conclusion">
+                    <span>結論 / CLINICAL BOTTOM LINE</span>
+                    <p>{item.whyImportant}</p>
+                  </div>
+
+                  <div className="brief-card-actions">
+                    <a href={item.url} target="_blank" rel="noreferrer">PubMed / 原文を開く ↗</a>
+                    <button type="button" onClick={() => togglePaper(item.id)}>閉じる</button>
+                  </div>
+                </div>
+              )}
+
+              {isPaper && !expanded && (
+                <div className="brief-paper-hint">クリックで要約・主要結果・結論を表示</div>
+              )}
             </article>
           );
         })}
