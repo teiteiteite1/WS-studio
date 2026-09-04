@@ -4,6 +4,7 @@ import MusicPlayerProvider from "./MusicPlayerProvider";
 import VisitTracker from "./VisitTracker";
 import "./globals.css";
 import "./engagement.css";
+import "./sync.css";
 
 const siteUrl = "https://ws-studio-wheat.vercel.app";
 
