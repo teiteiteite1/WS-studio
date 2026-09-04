@@ -86,6 +86,7 @@ export default async function Home() {
           <a href="https://x.com/WABISABI_pomo" target="_blank" rel="noreferrer"><span>X</span><span>@WABISABI_pomo</span><i>↗</i></a>
           <a href="https://www.instagram.com/teiteite1tei" target="_blank" rel="noreferrer"><span>Instagram</span><span>@teiteite1tei</span><i>↗</i></a>
           <a href="https://www.threads.com/@teiteite1tei" target="_blank" rel="noreferrer"><span>Threads</span><span>@teiteite1tei</span><i>↗</i></a>
+          <a href="https://bsky.app/profile/teiteiteite1.bsky.social" target="_blank" rel="noreferrer"><span>Bluesky</span><span>@teiteiteite1.bsky.social</span><i>↗</i></a>
           <a href="https://www.pinterest.com/teiwsstudio/" target="_blank" rel="noreferrer"><span>Pinterest</span><span>@teiwsstudio</span><i>↗</i></a>
           <a href="https://suno.com/@teiteiteitei" target="_blank" rel="noreferrer"><span>SUNO</span><span>@teiteiteitei</span><i>↗</i></a>
         </div>
