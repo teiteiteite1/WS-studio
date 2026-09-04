@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SyncAccount from "../components/SyncAccount";
+import { getBriefReadIds, PersonalSession, saveBriefReadIds } from "../lib/personalSync";
 
 type Category = "ai" | "urology" | "dialysis";
 type Importance = "CRITICAL" | "HIGH" | "MEDIUM";
@@ -36,9 +38,15 @@ function loadRead(): string[] {
   } catch { return []; }
 }
 
+function persistRead(ids: string[]) {
+  localStorage.setItem(READ_KEY, JSON.stringify(Array.from(new Set(ids))));
+}
+
 export default function BriefClient() {
   const [data, setData] = useState<BriefResponse | null>(null);
   const [readIds, setReadIds] = useState<string[]>([]);
+  const [session, setSession] = useState<PersonalSession | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [active, setActive] = useState<Category | "all">("all");
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,11 +71,30 @@ export default function BriefClient() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  const handleSession = useCallback(async (nextSession: PersonalSession | null) => {
+    setSession(nextSession);
+    if (!nextSession) return;
+    setSyncing(true);
+    try {
+      const local = loadRead();
+      const cloud = await getBriefReadIds(nextSession);
+      const merged = Array.from(new Set([...local, ...cloud]));
+      persistRead(merged);
+      setReadIds(merged);
+      await saveBriefReadIds(nextSession, merged);
+    } catch {
+      setError("同期だけ失敗しました。端末内の既読情報は保持されています。");
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
   const markRead = (id: string) => {
     setReadIds((current) => {
       if (current.includes(id)) return current;
       const next = [...current, id];
-      localStorage.setItem(READ_KEY, JSON.stringify(next));
+      persistRead(next);
+      if (session) void saveBriefReadIds(session, [id]).catch(() => setError("既読のクラウド同期に失敗しました。端末には保存済みです。"));
       return next;
     });
   };
@@ -75,8 +102,9 @@ export default function BriefClient() {
   const markAllRead = () => {
     if (!data) return;
     const ids = Array.from(new Set([...readIds, ...data.items.map((item) => item.id)]));
-    localStorage.setItem(READ_KEY, JSON.stringify(ids));
+    persistRead(ids);
     setReadIds(ids);
+    if (session) void saveBriefReadIds(session, ids).catch(() => setError("既読のクラウド同期に失敗しました。端末には保存済みです。"));
   };
 
   const visible = useMemo(() => {
@@ -99,6 +127,8 @@ export default function BriefClient() {
           <p className="brief-subtitle">AI・泌尿器科・透析。今日見る価値があるものだけ。</p>
         </div>
         <div className="brief-header-actions">
+          <SyncAccount onSessionChange={handleSession} />
+          {syncing && <span className="brief-syncing">SYNCING…</span>}
           <div className="brief-unread"><strong>{unreadCount}</strong><span>UNREAD</span></div>
           <button type="button" onClick={() => void refresh()} disabled={loading}>{loading ? "更新中" : "更新"}</button>
         </div>
