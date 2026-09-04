@@ -5,6 +5,7 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-48.webp", alt: "暗い森を背景に拳銃をこちらへ向ける白髪の天使を描いた青灰色のAIイラスト" },
   { src: "/gallery/gallery-39.webp", alt: "青と橙の抽象的な風景に立つ黒髪の少女を描いたAIイラスト作品" },
   { src: "/gallery/gallery-40.webp", alt: "屋外の光の中で座る緑色の瞳の白髪天使を描いた生成AIアート" },
   { src: "/gallery/gallery-41.webp", alt: "階段の影に佇む黒いドレスの白髪少女を描いた幻想的なAIイラスト" },
