@@ -1,6 +1,5 @@
 "use client";
 
-import { trackEvent } from "./analytics-client";
 
 type Brand = "x" | "instagram" | "threads" | "bluesky" | "pinterest" | "note" | "spotify" | "shop";
 
@@ -105,7 +104,7 @@ export default function QuickSocialLinks() {
             rel="noreferrer"
             aria-label={link.label}
             title={link.label}
-            onClick={() => trackEvent("social_click", link.label)}
+
           >
             <BrandIcon brand={link.brand} />
           </a>

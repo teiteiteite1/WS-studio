@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { trackEvent } from "./analytics-client";
 import {
   createContext,
   type ReactNode,
@@ -37,6 +38,7 @@ export function useMusicPlayer() {
 
 export default function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playingTitle = useRef("");
   const [activeTrack, setActiveTrack] = useState<PlayerTrack | null>(null);
   const [playlist, setPlaylist] = useState<PlayerTrack[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,6 +47,7 @@ export default function MusicPlayerProvider({ children }: { children: ReactNode 
     const audio = audioRef.current;
     if (!audio) return;
 
+    playingTitle.current = track.title;
     audio.src = track.previewUrl;
     audio.currentTime = 0;
     setActiveTrack(track);
@@ -131,7 +134,7 @@ export default function MusicPlayerProvider({ children }: { children: ReactNode 
       }}
     >
       {children}
-      <audio ref={audioRef} preload="none" onEnded={nextTrack} />
+      <audio ref={audioRef} preload="none" onPlay={() => trackEvent("music_play", playingTitle.current)} onEnded={nextTrack} />
 
       {activeTrack && (
         <aside className="persistent-player" aria-label="Music player">
