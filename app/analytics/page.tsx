@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
  const load=useCallback(async()=>{
   const id=++sequence.current;setLoading(true);setError('');
   try{
-   if(!validDay(start)||!validDay(end)||start>end||Date.parse(end)-Date.parse(start)>365*86400000)throw new Error('期間は過去366日以内の幅で、開始日から終了日の順に指定してください。');
+   if(!validDay(start)||!validDay(end)||start>end||Date.parse(end)-Date.parse(start)>365*86400000)throw new Error('期間の幅は最大366日です。開始日から終了日の順に指定してください。');
    const s=await getValidSession();if(!s){setAuthed(false);setData(null);throw new Error('ログインしてください。');}
    const r=await fetch('/api/stats?'+new URLSearchParams({start,end,site}),{headers:{Authorization:'Bearer '+s.access_token},cache:'no-store',signal:AbortSignal.timeout(20000)});const next=await r.json();
    if(!r.ok){if(r.status===401){setAuthed(false);setData(null);}throw new Error(next.error||'集計を取得できません。');}
@@ -77,7 +77,9 @@ export default function AnalyticsPage() {
  const baseline=data?.baseline.find(s=>s.channel===channel)||history[0];
  const last=history[history.length-1];
  const delta=last&&baseline&&last.day!==baseline.day?Number(last.followers)-Number(baseline.followers):null;
- const tracked=!!data?.coverage.some(c=>c.site===site||site==='all');
+ const coverage=data?.coverage.filter(c=>c.site===site||site==='all')||[];
+ const firstDay=coverage.length?new Date(Math.min(...coverage.map(c=>Date.parse(c.first_at)))+9*3600000).toISOString().slice(0,10):null;
+ const tracked=!!firstDay&&firstDay<=end;
  return <main className="ix">
   <header className="ix-top"><a className="ix-brand" href="/analytics">WS STUDIO / INSIGHTS</a><nav className="ix-links"><a href="https://ws-studio-hub.wsstudio.chatgpt.site">HUB</a><a href="/">公式サイト</a>{authed&&<button onClick={()=>{sequence.current++;signOutLocal();setAuthed(false);setData(null);setNotice('');}}>ログアウト</button>}</nav></header>
   {error&&<div className="ix-alert" role="alert">{error}</div>}{notice&&<div className="ix-alert ix-success" role="status">{notice}</div>}
@@ -95,7 +97,7 @@ export default function AnalyticsPage() {
       ['訪問回数（セッション）',data.summary.tracked_session_views?fmt(data.summary.sessions):'—','30分の無操作で新しい訪問'],
       ['クリック・アクション',tracked?fmt(data.summary.actions):'—','直近5分：'+fmt(data.summary.active_last_5m)+'ブラウザ']
      ].map(([title,value,sub])=><article className="ix-metric" key={title}><span className="muted">{title}</span><strong>{value}</strong><small>{sub}</small></article>)}</div>
-     <section className="ix-panel"><h2>訪問者の推移</h2>{tracked?<Chart points={data.daily.map(d=>({day:d.day,value:d.visitors}))} start={start} end={end} label="日別の訪問者数"/>:<p className="ix-empty">計測開始待ち</p>}</section>
+     <section className="ix-panel"><h2>訪問者の推移</h2>{tracked?<Chart points={data.daily.map(d=>({day:d.day,value:firstDay&&d.day<firstDay?null:d.visitors}))} start={start} end={end} label="日別の訪問者数"/>:<p className="ix-empty">計測開始待ち</p>}</section>
      {!!data.summary.legacy_views&&<p className="ix-note">旧計測のページ表示 {fmt(data.summary.legacy_views)}件を含みます。旧記録にはセッション情報がないため、訪問回数と一部の動線には含まれません。</p>}
      <div className="ix-grid"><section className="ix-panel"><h2>流入元</h2><Table heads={['流入元','訪問者','表示']} rows={data.sources.map(r=>[r.source,fmt(r.visitors),fmt(r.pageviews)])}/></section><section className="ix-panel"><h2>閲覧されたページ</h2><Table heads={['場所 / ページ','訪問者','表示']} rows={data.paths.map(r=>[SITES[r.site]+' '+r.path,fmt(r.visitors),fmt(r.views)])}/></section><section className="ix-panel"><h2>アクション</h2><Table heads={['操作','回数']} rows={data.actions.map(r=>[EVENTS[r.kind]||r.kind,fmt(r.count)])}/></section><section className="ix-panel"><h2>端末</h2><Table heads={['種別','表示']} rows={data.devices.map(r=>[({mobile:'スマートフォン',tablet:'タブレット',desktop:'PC',unknown:'旧計測・不明'} as Record<string,string>)[r.device]||r.device,fmt(r.views)])}/></section></div>
      <section className="ix-panel"><h2>BASEへの動線と実績</h2><p>BASEへのリンクを押した訪問：<strong>{fmt(data.summary.shop_sessions)}</strong> 回</p><p className="muted">クリックから、BASE内の訪問・注文は推定しません。下はBASE管理画面から記録した実績です。</p><Table heads={['日付','訪問','注文','売上（円）']} rows={data.shop.map(r=>[r.day,fmt(r.visits),fmt(r.orders),fmt(r.revenue)])}/></section>

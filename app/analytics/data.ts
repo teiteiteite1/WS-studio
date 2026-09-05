@@ -28,7 +28,7 @@ export function stamp(value:string|null|undefined) { return value ? new Date(val
 export function change(current:number,previous:number) { return previous === 0 ? current === 0 ? '前期間と同じ' : '前期間は0件' : '前期間比 '+((current-previous)/previous*100>=0?'+':'')+Math.round((current-previous)/previous*100)+'%'; }
 export function nullableNumber(value:string,integer=true) { if (!value.trim()) return null; const n=Number(value.replace(/,/g,'')); if (!Number.isFinite(n) || n<0 || (integer && !Number.isSafeInteger(n))) throw new Error('数値は0以上'+(integer?'の整数':'')+'で入力してください。'); return n; }
 export function csv(rows:unknown[][]) {
- return '\uFEFF'+rows.map(row=>row.map(v=>{ let s=v==null?'':String(v);if (/^[=+\-@\t\r]/.test(s)) s="'"+s; return '"'+s.replace(/"/g,'""')+'"'; }).join(',')).join('\r\n');
+ return '\uFEFF'+rows.map(row=>row.map(v=>{ let s=v==null?'':String(v);if (/^[\s]*[=+\-@]|^[\t\r\n]/.test(s)) s="'"+s; return '"'+s.replace(/"/g,'""')+'"'; }).join(',')).join('\r\n');
 }
 export function parseCSV(text:string) {
  const rows:string[][]=[];let row:string[]=[],field='',quoted=false;

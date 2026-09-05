@@ -104,7 +104,7 @@ export default function QuickSocialLinks() {
             rel="noreferrer"
             aria-label={link.label}
             title={link.label}
-            
+
           >
             <BrandIcon brand={link.brand} />
           </a>
