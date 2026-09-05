@@ -1,185 +1,131 @@
 "use client";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { getValidSession, signIn, signOutLocal } from '../lib/personalSync';
+import { SUPABASE_KEY, SUPABASE_URL, SOCIAL_DESK, SYNC_URL } from '../lib/insights-config';
+import { CHANNELS, SITES, STATUS, EVENTS, today, shift, validDay, fmt, stamp, change, nullableNumber, csv, importFollowers, type Stats, type Snapshot } from './data';
+import Chart from './Chart';
+import './insights.css';
 
-import { useEffect, useMemo, useState } from "react";
-
-type Daily = { day: string; visitors: number };
-type PathStat = { path: string; views: number };
-type EventStat = { event_name: string; count: number };
-type Stats = {
-  today: number;
-  yesterday: number;
-  now: number;
-  total: number;
-  pageviews_today: number;
-  pageviews_total: number;
-  daily: Daily[];
-  top_paths: PathStat[];
-  events: EventStat[];
-};
-type SocialMetric = {
-  channel: string;
-  reach: number;
-  engagement: number;
-  followers: number;
-  note: string;
-};
-type SocialState = { updatedAt: string; rows: SocialMetric[] };
-
-const SOCIAL_KEY = "ws_insights_social_v1";
-const channels = ["Instagram", "Threads", "Pinterest", "Bluesky", "BASE"];
-const emptySocial = (): SocialState => ({
-  updatedAt: "",
-  rows: channels.map((channel) => ({ channel, reach: 0, engagement: 0, followers: 0, note: "" })),
-});
-const nf = new Intl.NumberFormat("ja-JP");
-const eventLabel: Record<string, string> = {
-  gallery_open: "Gallery opens",
-  music_play: "Music plays",
-  shop_click: "Shop clicks",
-  contact_sent: "Contacts",
-  social_click: "Social clicks",
-};
-
-function numberValue(value: string) {
-  const parsed = Number(value.replace(/,/g, ""));
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+const TABS=['概要','フォロワー','動線','記録','接続・計測'];
+function Table({heads,rows}:{heads:string[];rows:ReactNode[][]}) { return rows.length ? <div className="ix-table-wrap"><table><thead><tr>{heads.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c??'—'}</td>)}</tr>)}</tbody></table></div> : <p className="ix-empty">この期間に記録がありません。</p>; }
+function download(name:string,rows:unknown[][]) { const url=URL.createObjectURL(new Blob([csv(rows)],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
+function message(e:unknown) { return e instanceof Error ? e.message : '処理に失敗しました。もう一度お試しください。'; }
+async function ownerRequest(path:string,body?:unknown) {
+ const s=await getValidSession();if(!s)throw new Error('ログインし直してください。');
+ const r=await fetch(path.startsWith('https:')?path:SUPABASE_URL+'/rest/v1/'+path,{method:body===undefined?'GET':'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json',...(path===SYNC_URL?{}:{Prefer:'resolution=merge-duplicates,return=minimal'})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:AbortSignal.timeout(60000)});
+ if(!r.ok){const data=await r.json().catch(()=>({}));throw new Error(data.error || (r.status===401?'ログインし直してください。':r.status===403?'このアカウントでの操作が許可されていません。':'保存・取得に失敗しました。入力値と接続を確認してください。'));}
+ const text=await r.text();return text?JSON.parse(text):null;
 }
-
 export default function AnalyticsPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loadError, setLoadError] = useState(false);
-  const [social, setSocial] = useState<SocialState>(emptySocial);
-  const [editing, setEditing] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SOCIAL_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as SocialState;
-        if (Array.isArray(parsed.rows)) {
-          const rows = channels.map((channel) => parsed.rows.find((row) => row.channel === channel) ?? { channel, reach: 0, engagement: 0, followers: 0, note: "" });
-          setSocial({ updatedAt: parsed.updatedAt || "", rows });
-        }
-      }
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    const load = () =>
-      fetch("/api/stats", { cache: "no-store" })
-        .then((response) => {
-          if (!response.ok) throw new Error("stats");
-          return response.json();
-        })
-        .then((data) => {
-          setStats(data);
-          setLoadError(false);
-        })
-        .catch(() => setLoadError(true));
-    load();
-    const timer = window.setInterval(load, 60000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const summary = useMemo(() => {
-    const daily = stats?.daily ?? [];
-    const best = daily.reduce<Daily | null>((winner, day) => !winner || Number(day.visitors) > Number(winner.visitors) ? day : winner, null);
-    const engagement = (stats?.events ?? []).reduce((sum, event) => sum + Number(event.count), 0);
-    const socialReach = social.rows.reduce((sum, row) => sum + row.reach, 0);
-    const socialEngagement = social.rows.reduce((sum, row) => sum + row.engagement, 0);
-    const followers = social.rows.reduce((sum, row) => sum + row.followers, 0);
-    return { best, engagement, socialReach, socialEngagement, followers };
-  }, [stats, social]);
-
-  const change = !stats || !stats.yesterday ? null : Math.round(((stats.today - stats.yesterday) / stats.yesterday) * 100);
-  const maxDaily = Math.max(1, ...(stats?.daily ?? []).map((day) => Number(day.visitors)));
-  const hasSocial = social.rows.some((row) => row.reach || row.engagement || row.followers);
-
-  function updateSocial(index: number, field: keyof Omit<SocialMetric, "channel">, value: string) {
-    setSocial((current) => ({
-      ...current,
-      rows: current.rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: field === "note" ? value : numberValue(value) } : row),
-    }));
-    setSaved(false);
-  }
-
-  function saveSocial() {
-    const next = { ...social, updatedAt: new Date().toISOString() };
-    localStorage.setItem(SOCIAL_KEY, JSON.stringify(next));
-    setSocial(next);
-    setSaved(true);
-    setEditing(false);
-  }
-
-  const recommendations = [
-    change !== null && change < 0 ? "昨日より訪問が落ちています。Social Deskから人気ページへ1本導線を作る。" : "伸びている導線を維持。人気ページ上位の作品を次のSNS投稿に再利用する。",
-    (stats?.events ?? []).some((event) => event.event_name === "shop_click" && event.count > 0) ? "ショップクリックが発生中。BASE側の売上と照合して投稿別の成果を残す。" : "商品導線の反応はまだ小さめ。作品ページからBASEへの入口を1つだけ強くする。",
-    hasSocial ? "SNS数値は最新スナップショットと前回値を定期比較すると、媒体ごとの勝ち筋が見えます。" : "各SNSの管理画面からリーチ・反応・フォロワーを入力すると横断集計が完成します。",
-  ];
-
-  return (
-    <main className="insights">
-      <style>{`
-        :root{color-scheme:dark}.insights{min-height:100vh;padding:38px clamp(18px,4vw,64px) 80px;background:#080909;color:#f4f4f1;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-        .topline{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #272929;padding-bottom:18px}.wordmark{font-size:12px;font-weight:800;letter-spacing:.18em}.topline a{color:#999;text-decoration:none;font-size:11px;letter-spacing:.08em}
-        .hero{display:grid;grid-template-columns:1.4fr .6fr;gap:24px;align-items:end;padding:58px 0 42px}.eyebrow,.label{font-size:10px;font-weight:750;letter-spacing:.16em;color:#7e8380;text-transform:uppercase}.hero h1{margin:12px 0 0;font-size:clamp(64px,12vw,176px);line-height:.76;letter-spacing:-.085em;font-weight:500}.hero-copy{color:#9b9f9c;font-size:13px;line-height:1.7;max-width:360px;margin:0 0 4px auto}
-        .metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #272929;border-left:1px solid #272929}.metric{min-height:160px;padding:22px;border-right:1px solid #272929;border-bottom:1px solid #272929}.metric strong{display:block;margin-top:38px;font-size:clamp(36px,5vw,68px);font-weight:520;letter-spacing:-.06em}.metric small{display:block;color:#777d79;margin-top:8px;font-size:11px}.up{color:#b7e6c7}.down{color:#f0a9a9}
-        .section{margin-top:62px}.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:18px}.section-head h2{margin:5px 0 0;font-size:clamp(26px,4vw,48px);font-weight:520;letter-spacing:-.05em}.button{border:1px solid #393b3a;background:transparent;color:#eee;border-radius:999px;padding:10px 15px;font-size:11px;font-weight:750;cursor:pointer}.button:hover{background:#f3f3ef;color:#0a0b0b}.button.primary{background:#f3f3ef;color:#0a0b0b;border-color:#f3f3ef}
-        .trend{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:250px}.bar{display:grid;grid-template-rows:1fr auto auto;gap:9px;text-align:center;min-width:0}.track{height:100%;background:#121414;display:flex;align-items:flex-end}.fill{display:block;width:100%;min-height:5px;background:linear-gradient(#d9ddd8,#767c77)}.bar strong{font-size:13px}.bar span{font-size:9px;color:#737874;overflow:hidden}
-        .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.panel{border:1px solid #272929;padding:24px;min-width:0}.list{margin-top:18px}.list-row{display:flex;justify-content:space-between;gap:18px;border-top:1px solid #242625;padding:14px 0;font-size:12px}.list-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b5b8b5}.empty{color:#717673;font-size:12px;padding:22px 0}
-        .social-summary{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #272929}.social-summary>div{padding:22px;border-right:1px solid #272929}.social-summary>div:last-child{border:0}.social-summary strong{display:block;font-size:34px;margin-top:12px;letter-spacing:-.05em}
-        .social-grid{display:grid;grid-template-columns:repeat(5,1fr);border-left:1px solid #272929;margin-top:12px}.channel{border:1px solid #272929;border-left:0;padding:18px;min-width:0}.channel h3{font-size:13px;margin:0 0 22px}.channel dl{margin:0}.channel dl div{display:flex;justify-content:space-between;border-top:1px solid #222;padding:10px 0;font-size:11px}.channel dt{color:#767b78}.channel dd{margin:0;font-weight:700}.channel p{color:#757a77;font-size:10px;line-height:1.5;min-height:30px}
-        .editor{margin-top:12px;border:1px solid #363938;padding:20px}.editor-row{display:grid;grid-template-columns:130px repeat(3,1fr) 1.5fr;gap:10px;align-items:center;margin-bottom:10px}.editor-row label{font-size:12px;font-weight:700}.editor input{width:100%;background:#111313;border:1px solid #303332;color:#eee;padding:11px;border-radius:4px;font-size:12px}.editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.updated{color:#6f7571;font-size:10px}
-        .actions{counter-reset:item}.action{display:grid;grid-template-columns:52px 1fr;gap:18px;padding:20px 0;border-top:1px solid #272929}.action:before{counter-increment:item;content:"0" counter(item);color:#626763;font-size:11px}.action p{margin:0;font-size:14px;line-height:1.65;color:#c6c9c6}.foot{margin-top:70px;padding-top:18px;border-top:1px solid #272929;color:#646966;font-size:10px;display:flex;justify-content:space-between;gap:20px}
-        @media(max-width:900px){.hero{grid-template-columns:1fr}.hero-copy{margin:0}.metrics{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.social-grid{grid-template-columns:1fr 1fr}.editor-row{grid-template-columns:1fr 1fr}.editor-row label{grid-column:1/-1}.social-summary{grid-template-columns:1fr}.social-summary>div{border-right:0;border-bottom:1px solid #272929}}
-        @media(max-width:560px){.insights{padding-top:24px}.hero{padding-top:44px}.metrics{grid-template-columns:1fr 1fr}.metric{min-height:132px;padding:16px}.metric strong{margin-top:28px}.trend{height:190px;gap:4px}.social-grid{grid-template-columns:1fr}.section-head{align-items:flex-start;flex-direction:column}.foot{flex-direction:column}.editor-row{grid-template-columns:1fr}.social-summary strong{font-size:29px}}
-      `}</style>
-
-      <div className="topline"><span className="wordmark">WS STUDIO</span><a href="/">OFFICIAL SITE ↗</a></div>
-      <header className="hero">
-        <div><div className="eyebrow">Private performance desk</div><h1>INSIGHTS</h1></div>
-        <p className="hero-copy">公式サイトの実アクセスと、各SNS・ショップの最新スナップショットを一画面で。数字を眺めるだけでなく、次の一手まで整理します。</p>
-      </header>
-
-      <section className="metrics" aria-label="公式サイト主要指標">
-        <div className="metric"><div className="label">Today</div><strong>{stats ? nf.format(stats.today) : "—"}</strong><small>{change === null ? "前日比 —" : <span className={change >= 0 ? "up" : "down"}>{change >= 0 ? "↑" : "↓"} {Math.abs(change)}% vs yesterday</span>}</small></div>
-        <div className="metric"><div className="label">Live / 5 min</div><strong>{stats ? nf.format(stats.now) : "—"}</strong><small>active visitors</small></div>
-        <div className="metric"><div className="label">Pageviews today</div><strong>{stats ? nf.format(stats.pageviews_today) : "—"}</strong><small>official site</small></div>
-        <div className="metric"><div className="label">Engagement</div><strong>{stats ? nf.format(summary.engagement) : "—"}</strong><small>tracked actions</small></div>
-      </section>
-      {loadError && <p className="empty">公式サイトの集計を一時的に読み込めません。自動で再試行します。</p>}
-
-      <section className="section">
-        <div className="section-head"><div><div className="label">Official site</div><h2>7 day movement</h2></div><span className="updated">60秒ごとに更新 · 日本時間</span></div>
-        <div className="trend">{(stats?.daily ?? []).map((day) => <div key={day.day} className="bar"><div className="track"><i className="fill" style={{ height: `${Math.max(3, Number(day.visitors) / maxDaily * 100)}%` }} /></div><strong>{day.visitors}</strong><span>{day.day}</span></div>)}</div>
-        <div className="two">
-          <div className="panel"><div className="label">Popular pages</div><div className="list">{stats?.top_paths?.length ? stats.top_paths.map((path) => <div className="list-row" key={path.path}><span>{path.path}</span><strong>{nf.format(path.views)}</strong></div>) : <div className="empty">まだデータがありません。</div>}</div></div>
-          <div className="panel"><div className="label">Actions</div><div className="list">{stats?.events?.length ? stats.events.map((event) => <div className="list-row" key={event.event_name}><span>{eventLabel[event.event_name] ?? event.event_name}</span><strong>{nf.format(event.count)}</strong></div>) : <div className="empty">まだデータがありません。</div>}</div></div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head"><div><div className="label">Cross-channel snapshot</div><h2>Social + Shop</h2></div><button className="button" onClick={() => setEditing((value) => !value)}>{editing ? "CLOSE" : "UPDATE NUMBERS"}</button></div>
-        <div className="social-summary">
-          <div><div className="label">Total reach</div><strong>{hasSocial ? nf.format(summary.socialReach) : "—"}</strong></div>
-          <div><div className="label">Total reactions</div><strong>{hasSocial ? nf.format(summary.socialEngagement) : "—"}</strong></div>
-          <div><div className="label">Audience / followers</div><strong>{hasSocial ? nf.format(summary.followers) : "—"}</strong></div>
-        </div>
-        <div className="social-grid">{social.rows.map((row) => <article className="channel" key={row.channel}><h3>{row.channel}</h3><dl><div><dt>Reach</dt><dd>{row.reach ? nf.format(row.reach) : "—"}</dd></div><div><dt>Reactions</dt><dd>{row.engagement ? nf.format(row.engagement) : "—"}</dd></div><div><dt>{row.channel === "BASE" ? "Orders" : "Followers"}</dt><dd>{row.followers ? nf.format(row.followers) : "—"}</dd></div></dl><p>{row.note || "メモなし"}</p></article>)}</div>
-        {editing && <div className="editor">
-          {social.rows.map((row, index) => <div className="editor-row" key={row.channel}><label>{row.channel}</label><input inputMode="numeric" aria-label={`${row.channel} reach`} value={row.reach || ""} placeholder="リーチ" onChange={(event) => updateSocial(index, "reach", event.target.value)} /><input inputMode="numeric" aria-label={`${row.channel} reactions`} value={row.engagement || ""} placeholder="反応数" onChange={(event) => updateSocial(index, "engagement", event.target.value)} /><input inputMode="numeric" aria-label={`${row.channel} audience`} value={row.followers || ""} placeholder={row.channel === "BASE" ? "注文数" : "フォロワー"} onChange={(event) => updateSocial(index, "followers", event.target.value)} /><input aria-label={`${row.channel} note`} value={row.note} placeholder="期間・投稿・売上などのメモ" onChange={(event) => updateSocial(index, "note", event.target.value)} /></div>)}
-          <div className="editor-actions"><button className="button" onClick={() => setEditing(false)}>CANCEL</button><button className="button primary" onClick={saveSocial}>SAVE SNAPSHOT</button></div>
-        </div>}
-        <p className="updated">{saved ? "保存しました。 " : ""}{social.updatedAt ? `最終更新 ${new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "short" }).format(new Date(social.updatedAt))} · ` : ""}SNS・BASEの値はこの端末だけに保存されます。</p>
-      </section>
-
-      <section className="section">
-        <div className="section-head"><div><div className="label">Next moves</div><h2>What to do now</h2></div>{summary.best && <span className="updated">7日間の最高値 {summary.best.day} / {summary.best.visitors}</span>}</div>
-        <div className="actions">{recommendations.map((recommendation) => <div className="action" key={recommendation}><p>{recommendation}</p></div>)}</div>
-      </section>
-
-      <footer className="foot"><span>匿名ブラウザIDによる概算値。SNS値は各管理画面から入力した実数のみ。</span><span>WS STUDIO / INSIGHTS</span></footer>
-    </main>
-  );
+ const [ready,setReady]=useState(false),[authed,setAuthed]=useState(false),[data,setData]=useState<Stats|null>(null);
+ const [start,setStart]=useState(()=>shift(today(),-29)),[end,setEnd]=useState(today),[site,setSite]=useState('official'),[tab,setTab]=useState(0);
+ const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(false);
+ const [channel,setChannel]=useState('bluesky'),[excluded,setExcluded]=useState(false),[legacy,setLegacy]=useState(false),[imported,setImported]=useState<Snapshot[]>([]);
+ const [link,setLink]=useState('');const sequence=useRef(0),popupCleanup=useRef<()=>void>(()=>{});
+ useEffect(()=>{let active=true;getValidSession().then(s=>{if(active){setAuthed(!!s);setReady(true);}});try{setExcluded(localStorage.getItem('ws_analytics_exclude')==='1');setLegacy(!!localStorage.getItem('ws_insights_social_v1')&&!localStorage.getItem('ws_insights_social_migrated'));}catch{}return()=>{active=false;popupCleanup.current();};},[]);
+ const load=useCallback(async()=>{
+  const id=++sequence.current;setLoading(true);setError('');
+  try{
+   if(!validDay(start)||!validDay(end)||start>end||Date.parse(end)-Date.parse(start)>365*86400000)throw new Error('期間は過去366日以内の幅で、開始日から終了日の順に指定してください。');
+   const s=await getValidSession();if(!s){setAuthed(false);setData(null);throw new Error('ログインしてください。');}
+   const r=await fetch('/api/stats?'+new URLSearchParams({start,end,site}),{headers:{Authorization:'Bearer '+s.access_token},cache:'no-store',signal:AbortSignal.timeout(20000)});const next=await r.json();
+   if(!r.ok){if(r.status===401){setAuthed(false);setData(null);}throw new Error(next.error||'集計を取得できません。');}
+   if(id===sequence.current)setData(next);
+  }catch(e){if(id===sequence.current)setError(message(e));}finally{if(id===sequence.current)setLoading(false);}
+ },[start,end,site]);
+ useEffect(()=>{if(!authed)return;setData(null);void load();const timer=setInterval(()=>{if(document.visibilityState==='visible')void load();},60000);return()=>{sequence.current++;clearInterval(timer);};},[authed,load]);
+ async function run(action:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await action();}catch(e){setError(message(e));}finally{setBusy(false);}}
+ async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);await run(async()=>{await signIn(String(f.get('email')),String(f.get('password')));setAuthed(true);});}
+ async function manual(e:FormEvent<HTMLFormElement>){
+  e.preventDefault();const f=new FormData(e.currentTarget);
+  await run(async()=>{const day=String(f.get('day')),followers=nullableNumber(String(f.get('followers'))),reach=nullableNumber(String(f.get('reach'))),reactions=nullableNumber(String(f.get('reactions'))),period_start=String(f.get('period_start')||'')||null,period_end=String(f.get('period_end')||'')||null;
+   if(!validDay(day))throw new Error('記録日を確認してください。');
+   if(followers===null&&reach===null&&reactions===null)throw new Error('少なくとも1つの数値を入力してください。');
+   if((reach!==null||reactions!==null)&&(!period_start||!period_end||!validDay(period_start)||!validDay(period_end)||period_start>period_end))throw new Error('リーチ・反応の集計期間を指定してください。');
+   await ownerRequest('ws_social_snapshots?on_conflict=channel,day,source',[{channel:f.get('channel'),day,followers,reach,reactions,period_start,period_end,source:'manual',observed_at:new Date().toISOString(),note:String(f.get('note')||'')}]);await load();setNotice('記録を保存しました。同じSNS・日付の手入力記録は更新されます。');
+  });
+ }
+ async function shop(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);await run(async()=>{const day=String(f.get('day')),visits=nullableNumber(String(f.get('visits'))),orders=nullableNumber(String(f.get('orders'))),revenue=nullableNumber(String(f.get('revenue')),false);if(!validDay(day)||[visits,orders,revenue].every(v=>v===null))throw new Error('記録日と少なくとも1つの数値を入力してください。');await ownerRequest('ws_shop_snapshots?on_conflict=day',[{day,visits,orders,revenue,note:String(f.get('note')||''),updated_at:new Date().toISOString()}]);await load();setNotice('BASEの実績を保存しました。');});}
+ async function migrate(){
+  await run(async()=>{let old;try{old=JSON.parse(localStorage.getItem('ws_insights_social_v1')||'null');}catch{throw new Error('以前の記録を読み込めませんでした。');}
+   if(!old?.updatedAt||!Array.isArray(old.rows)||!Number.isFinite(Date.parse(old.updatedAt)))throw new Error('以前の記録に保存日時がありません。確認できる数値を手入力してください。');
+   const day=new Date(Date.parse(old.updatedAt)+9*3600000).toISOString().slice(0,10);
+   const rows=old.rows.filter((r:{channel:string;followers:number})=>CHANNELS.includes(r.channel.toLowerCase() as typeof CHANNELS[number])&&Number.isSafeInteger(r.followers)&&r.followers>0).map((r:{channel:string;followers:number;note?:string})=>({channel:r.channel.toLowerCase(),day,followers:r.followers,source:'legacy',observed_at:old.updatedAt,note:('旧端末記録から移行。'+(r.note||'')).slice(0,1000)}));
+   if(!rows.length)throw new Error('移行できる確定値がありません。旧画面の初期値0は未取得と区別できないため手入力で確認してください。');
+   await ownerRequest('ws_social_snapshots?on_conflict=channel,day,source',rows);localStorage.setItem('ws_insights_social_migrated','1');setLegacy(false);await load();setNotice('以前のフォロワー数を移行しました。元の端末記録は残しています。');
+  });
+ }
+ async function connect(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget,f=new FormData(form);await run(async()=>{await ownerRequest(SYNC_URL,{action:'connect',channel:f.get('channel'),token:f.get('token')});form.reset();await load();setNotice('接続とフォロワー数の取得を完了しました。');});}
+ function connectDesk(){
+  popupCleanup.current();setError('');setNotice('');
+  const nonce=crypto.randomUUID(),popup=window.open(SOCIAL_DESK+'/insights-connect?nonce='+nonce,'ws-insights-connect','width=560,height=640');
+  if(!popup){setError('Social Deskを開けません。ポップアップを許可してください。');return;}
+  const receive=(e:MessageEvent)=>{
+   if(e.origin!==SOCIAL_DESK||e.source!==popup||e.data?.type!=='ws-insights-credentials'||e.data.nonce!==nonce)return;
+   cleanup();popup.close();void run(async()=>{
+    const credentials=Array.isArray(e.data.credentials)?e.data.credentials:[];let count=0;const failures:string[]=[];
+    for(const c of credentials){if(!['instagram','threads','pinterest'].includes(c.channel)||typeof c.token!=='string')continue;try{await ownerRequest(SYNC_URL,{action:'connect',channel:c.channel,token:c.token});count++;}catch(err){failures.push(c.channel+'：'+message(err));}}
+    await load();if(count)setNotice(count+'件のSNSを接続しました。');if(failures.length)throw new Error(failures.join(' / '));if(!credentials.length)throw new Error('Social Deskに接続可能なSNSの認証情報がありません。');
+   });
+  };
+  const timer=setTimeout(()=>{cleanup();setError('接続が時間切れになりました。Social Deskにログインしてからもう一度お試しください。');},180000);
+  const cleanup=()=>{clearTimeout(timer);window.removeEventListener('message',receive);};popupCleanup.current=cleanup;window.addEventListener('message',receive);
+ }
+ function buildLink(e:FormEvent<HTMLFormElement>){e.preventDefault();setError('');try{const f=new FormData(e.currentTarget),u=new URL(String(f.get('url')));if(u.protocol!=='https:')throw new Error('httpsのURLを入力してください。');for(const k of ['source','medium','campaign','content']){const v=String(f.get(k)||'');if(v)u.searchParams.set('utm_'+k,v);else u.searchParams.delete('utm_'+k);}setLink(u.href);}catch(e){setError(message(e));}}
+ const account=data?.social.find(a=>a.channel===channel);
+ const history=data?.history.filter(s=>s.channel===channel&&s.followers!==null)||[];
+ const baseline=data?.baseline.find(s=>s.channel===channel)||history[0];
+ const last=history[history.length-1];
+ const delta=last&&baseline&&last.day!==baseline.day?Number(last.followers)-Number(baseline.followers):null;
+ const tracked=!!data?.coverage.some(c=>c.site===site||site==='all');
+ return <main className="ix">
+  <header className="ix-top"><a className="ix-brand" href="/analytics">WS STUDIO / INSIGHTS</a><nav className="ix-links"><a href="https://ws-studio-hub.wsstudio.chatgpt.site">HUB</a><a href="/">公式サイト</a>{authed&&<button onClick={()=>{sequence.current++;signOutLocal();setAuthed(false);setData(null);setNotice('');}}>ログアウト</button>}</nav></header>
+  {error&&<div className="ix-alert" role="alert">{error}</div>}{notice&&<div className="ix-alert ix-success" role="status">{notice}</div>}
+  {!ready?<p className="ix-empty">アカウントを確認しています…</p>:!authed?<section className="ix-login ix-panel"><h1>Insights</h1><p className="muted">Brief・AI30と共通のアカウントでログインしてください。</p><form onSubmit={login}><label>メールアドレス<input name="email" type="email" autoComplete="username" required/></label><label>パスワード<input name="password" type="password" autoComplete="current-password" required/></label><button className="primary" disabled={busy}>ログイン</button></form></section>:<>
+   <h1>Insights</h1><p className="muted">訪問・動線・SNSの推移を、記録された実数で確認。</p>
+   <div className="ix-toolbar"><label>対象<select value={site} onChange={e=>setSite(e.target.value)}>{Object.entries(SITES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><label>開始日<input aria-label="開始日" type="date" value={start} max={end} onChange={e=>setStart(e.target.value)}/></label><label>終了日<input aria-label="終了日" type="date" value={end} min={start} max={today()} onChange={e=>setEnd(e.target.value)}/></label>{[7,30,90].map(n=><button key={n} onClick={()=>{setStart(shift(today(),1-n));setEnd(today());}}>{n}日</button>)}<button disabled={loading} onClick={()=>void load()}>{loading?'更新中…':'再読み込み'}</button></div>
+   <p className="muted">日本時間（JST）・{data?'最終更新 '+stamp(data.generated_at):'集計を読み込み中'}・1分ごとに更新</p>
+   <div className="ix-tabs" role="tablist" aria-label="インサイトの表示">{TABS.map((t,i)=><button key={t} id={'ix-tab-'+i} role="tab" aria-controls="ix-content" aria-selected={tab===i} tabIndex={tab===i?0:-1} onClick={()=>setTab(i)} onKeyDown={e=>{let n=i;if(e.key==='ArrowRight')n=(i+1)%TABS.length;else if(e.key==='ArrowLeft')n=(i+TABS.length-1)%TABS.length;else if(e.key==='Home')n=0;else if(e.key==='End')n=TABS.length-1;else return;e.preventDefault();setTab(n);document.getElementById('ix-tab-'+n)?.focus();}}>{t}</button>)}</div>
+   {data&&<div id="ix-content" role="tabpanel" aria-labelledby={'ix-tab-'+tab}>
+    {tab===0&&<>
+     {!tracked&&<p className="ix-note">この場所はまだ訪問データを受信していません。計測の開始後から表示されます。</p>}
+     <div className="ix-metrics">{[
+      ['訪問者（ブラウザ）',tracked?fmt(data.summary.visitors):'—',change(data.summary.visitors,data.summary.previous_visitors)],
+      ['ページ表示',tracked?fmt(data.summary.pageviews):'—',change(data.summary.pageviews,data.summary.previous_pageviews)],
+      ['訪問回数（セッション）',data.summary.tracked_session_views?fmt(data.summary.sessions):'—','30分の無操作で新しい訪問'],
+      ['クリック・アクション',tracked?fmt(data.summary.actions):'—','直近5分：'+fmt(data.summary.active_last_5m)+'ブラウザ']
+     ].map(([title,value,sub])=><article className="ix-metric" key={title}><span className="muted">{title}</span><strong>{value}</strong><small>{sub}</small></article>)}</div>
+     <section className="ix-panel"><h2>訪問者の推移</h2>{tracked?<Chart points={data.daily.map(d=>({day:d.day,value:d.visitors}))} start={start} end={end} label="日別の訪問者数"/>:<p className="ix-empty">計測開始待ち</p>}</section>
+     {!!data.summary.legacy_views&&<p className="ix-note">旧計測のページ表示 {fmt(data.summary.legacy_views)}件を含みます。旧記録にはセッション情報がないため、訪問回数と一部の動線には含まれません。</p>}
+     <div className="ix-grid"><section className="ix-panel"><h2>流入元</h2><Table heads={['流入元','訪問者','表示']} rows={data.sources.map(r=>[r.source,fmt(r.visitors),fmt(r.pageviews)])}/></section><section className="ix-panel"><h2>閲覧されたページ</h2><Table heads={['場所 / ページ','訪問者','表示']} rows={data.paths.map(r=>[SITES[r.site]+' '+r.path,fmt(r.visitors),fmt(r.views)])}/></section><section className="ix-panel"><h2>アクション</h2><Table heads={['操作','回数']} rows={data.actions.map(r=>[EVENTS[r.kind]||r.kind,fmt(r.count)])}/></section><section className="ix-panel"><h2>端末</h2><Table heads={['種別','表示']} rows={data.devices.map(r=>[({mobile:'スマートフォン',tablet:'タブレット',desktop:'PC',unknown:'旧計測・不明'} as Record<string,string>)[r.device]||r.device,fmt(r.views)])}/></section></div>
+     <section className="ix-panel"><h2>BASEへの動線と実績</h2><p>BASEへのリンクを押した訪問：<strong>{fmt(data.summary.shop_sessions)}</strong> 回</p><p className="muted">クリックから、BASE内の訪問・注文は推定しません。下はBASE管理画面から記録した実績です。</p><Table heads={['日付','訪問','注文','売上（円）']} rows={data.shop.map(r=>[r.day,fmt(r.visits),fmt(r.orders),fmt(r.revenue)])}/></section>
+    </>}
+    {tab===1&&<>
+     <p className="ix-note">各SNSの数値は終了日までの最新記録です。「—」は未取得。日々の記録が増えると推移が表示されます。未計測の日は補完しません。</p>
+     <div className="ix-accounts">{data.social.map(a=><button className="ix-account" key={a.channel} aria-pressed={channel===a.channel} onClick={()=>setChannel(a.channel)}><h3>{a.label}</h3><small>@{a.handle}</small><strong>{fmt(a.latest?.followers)}</strong><small>{a.latest?a.latest.day+' / '+(a.latest.source==='api'?'自動取得':a.latest.source==='legacy'?'移行記録':'手入力'):'記録待ち'}</small><span className="ix-status">{STATUS[a.status]||a.status}</span></button>)}</div>
+     <section className="ix-panel"><div className="ix-inline"><h2>{account?.label} の推移</h2>{account&&<a href={account.profile_url} target="_blank" rel="noreferrer">SNSを開く ↗</a>}</div><p>{delta===null?'比較できる記録がまだありません。':(delta>0?'+':'')+fmt(delta)+' フォロワー（'+baseline?.day+' → '+last?.day+'）'}</p><Chart points={history.map(p=>({day:p.day,value:p.followers}))} start={start} end={end} label={(account?.label||channel)+'のフォロワー推移'} gaps/><Table heads={['記録日','フォロワー','取得方法']} rows={history.slice().reverse().map(r=>[r.day,fmt(r.followers),r.source==='api'?'自動取得':r.source==='legacy'?'移行記録':'手入力'])}/></section>
+    </>}
+    {tab===2&&<>
+     <section className="ix-panel"><h2>流入元 → 閲覧ページ → 外部リンク</h2><p className="muted">クリックしたページと、同じ訪問で記録した流入元を表示します。サイトをまたぐ個人の特定は行いません。</p><Table heads={['流入元','ページ','移動先','クリック']} rows={data.flows.map(r=>[r.source,r.path,r.destination,fmt(r.clicks)])}/></section>
+     <section className="ix-panel"><h2>移動先</h2><Table heads={['リンク先','クリック','訪問回数']} rows={data.destinations.map(r=>[r.destination,fmt(r.clicks),r.kind==='outbound_click'?fmt(r.sessions):'旧計測：不明'])}/></section>
+     <section className="ix-panel"><h2>投稿・キャンペーン別</h2><Table heads={['流入元 / 媒体','キャンペーン / 投稿','訪問','表示','外部クリック']} rows={data.campaigns.map(r=>[r.source+' / '+(r.medium||'—'),r.campaign+' / '+(r.content||'—'),fmt(r.sessions),fmt(r.pageviews),fmt(r.clicks)])}/></section>
+     <section className="ix-panel"><h2>投稿用の計測リンク</h2><p className="muted">公式サイトや計測済みページへの投稿リンクに使えます。SNS名・企画名・投稿名を付けると、訪問を区別できます。</p><form className="ix-form" onSubmit={buildLink}><label className="ix-wide">リンク先<input name="url" type="url" defaultValue="https://ws-studio-wheat.vercel.app/" required/></label><label>SNS<select name="source">{CHANNELS.map(c=><option key={c}>{c}</option>)}</select></label><label>媒体<input name="medium" defaultValue="social" required/></label><label>企画・キャンペーン<input name="campaign" placeholder="album_release" required maxLength={200}/></label><label>投稿名<input name="content" placeholder="post_01" maxLength={200}/></label><button className="primary">リンクを作成</button></form>{link&&<><pre>{link}</pre><button onClick={()=>void run(async()=>{await navigator.clipboard.writeText(link);setNotice('リンクをコピーしました。');})}>コピー</button></>}</section>
+    </>}
+    {tab===3&&<>
+     {legacy&&<section className="ix-panel"><h2>この端末に残る以前の記録</h2><p className="muted">保存日時と正のフォロワー数を共通データベースへ移行します。旧初期値の0、期間不明のリーチ・反応、BASEの数値は元の記録に残します。</p><button disabled={busy} onClick={()=>void migrate()}>以前の記録を移行</button></section>}
+     <section className="ix-panel"><h2>SNSの実数を記録</h2><p className="muted">空欄は未取得、0は実測0。同じSNS・日付の手入力を保存すると更新されます。自動取得の履歴も残ります。</p><form className="ix-form" onSubmit={manual}><label>SNS<select name="channel">{data.social.map(a=><option key={a.channel} value={a.channel}>{a.label}</option>)}</select></label><label>記録日<input type="date" name="day" defaultValue={today()} max={today()} required/></label><label>フォロワー<input name="followers" type="number" min="0" step="1"/></label><label>リーチ<input name="reach" type="number" min="0" step="1"/></label><label>反応<input name="reactions" type="number" min="0" step="1"/></label><label>集計期間の開始<input type="date" name="period_start" max={today()}/></label><label>集計期間の終了<input type="date" name="period_end" max={today()}/></label><label className="ix-wide">メモ<textarea name="note" rows={2} maxLength={1000}/></label><button className="primary" disabled={busy}>保存</button></form></section>
+     <section className="ix-panel"><h2>フォロワー履歴のCSV取込</h2><p className="muted">channel,day,followers,note の列で取り込めます。SNS名は x / instagram / threads / bluesky / pinterest / note / suno。同じSNS・日付が複数行ある場合は末尾の行を採用します。</p><div className="ix-inline"><button onClick={()=>download('followers-template.csv',[['channel','day','followers','note']])}>ひな形をダウンロード</button><label>CSV（最大1MB / 2,000行）<input type="file" accept=".csv,text/csv" disabled={busy} onChange={async e=>{const f=e.target.files?.[0];if(!f)return;setImported([]);setError('');try{if(f.size>1000000)throw new Error('CSVは1MB以内にしてください。');setImported(importFollowers(await f.text()));}catch(err){setError(message(err));}e.target.value='';}}/></label></div>{!!imported.length&&<><p>{imported.length}件を保存します。先頭5件：</p><Table heads={['SNS','日付','フォロワー']} rows={imported.slice(0,5).map(r=>[r.channel,r.day,fmt(r.followers)])}/><button className="primary" disabled={busy} onClick={()=>void run(async()=>{await ownerRequest('ws_social_snapshots?on_conflict=channel,day,source',imported.map(r=>({...r,observed_at:new Date().toISOString()})));setImported([]);await load();setNotice('CSVを保存しました。');})}>確認した内容を取り込む</button></>}</section>
+     <section className="ix-panel"><h2>SNSの記録一覧</h2><button onClick={()=>download('ws-social-'+start+'-'+end+'.csv',[['channel','day','followers','reach','reactions','period_start','period_end','source','observed_at','note'],...data.records.map(r=>[r.channel,r.day,r.followers,r.reach,r.reactions,r.period_start,r.period_end,r.source,r.observed_at,r.note])])}>この期間のCSVを書き出す</button><Table heads={['日付 / SNS','フォロワー','リーチ / 反応','集計期間','取得方法']} rows={data.records.map(r=>[r.day+' / '+r.channel,fmt(r.followers),fmt(r.reach)+' / '+fmt(r.reactions),r.period_start?r.period_start+'〜'+r.period_end:'—',r.source])}/></section>
+     <section className="ix-panel"><h2>BASEの実績を記録</h2><form className="ix-form" onSubmit={shop}><label>日付<input name="day" type="date" defaultValue={today()} max={today()} required/></label><label>訪問数<input name="visits" type="number" min="0" step="1"/></label><label>注文数<input name="orders" type="number" min="0" step="1"/></label><label>売上（円）<input name="revenue" type="number" min="0" step="0.01"/></label><label className="ix-wide">メモ<input name="note" maxLength={1000}/></label><button className="primary" disabled={busy}>BASE実績を保存</button></form></section>
+    </>}
+    {tab===4&&<>
+     <section className="ix-panel"><h2>SNSの接続</h2><p>自動取得は毎日 06:10（日本時間）。最終実行：{stamp(data.sync?.started_at)} / {({succeeded:'成功',partial:'一部失敗',failed:'失敗',running:'実行中',interrupted:'中断'} as Record<string,string>)[data.sync?.status||'']||'未実行'}</p><div className="ix-inline"><button className="primary" disabled={busy} onClick={connectDesk}>Social Deskから接続</button><button disabled={busy} onClick={()=>void run(async()=>{const result=await ownerRequest(SYNC_URL,{});await load();if(result?.status==='failed'||result?.status==='partial')throw new Error('取得できないSNSがあります。下の接続状況を確認してください。');setNotice('フォロワーの取得を実行しました。');})}>今すぐ取得</button></div><p className="muted">Instagram・ThreadsはSocial Deskの接続を利用します。フォロワー閲覧権限が不足している場合は再認証が必要です。X・note・Sunoは手入力またはCSVで記録できます。</p><Table heads={['SNS','接続状況','最終試行','最終成功','詳細']} rows={data.social.map(a=>[a.label,STATUS[a.status]||a.status,stamp(a.last_attempt_at),stamp(a.last_success_at),a.last_error||'—'])}/></section>
+     <details className="ix-panel"><summary>認証トークンで接続する</summary><p className="muted">SNSで発行した閲覧権限のあるトークンを入力します。トークンは暗号化して保存され、画面には再表示されません。</p><form className="ix-form" onSubmit={connect}><label>SNS<select name="channel"><option value="instagram">Instagram</option><option value="threads">Threads</option><option value="pinterest">Pinterest</option></select></label><label className="ix-wide">アクセストークン<input name="token" type="password" autoComplete="off" required/></label><button disabled={busy}>接続して確認</button></form></details>
+     <section className="ix-panel"><h2>計測できている場所</h2><Table heads={['場所','最初の記録','最終受信','累計表示']} rows={Object.entries(SITES).filter(([k])=>k!=='all').map(([k,v])=>{const c=data.coverage.find(r=>r.site===k);return[v,stamp(c?.first_at),stamp(c?.last_at),fmt(c?.pageviews)];})}/><p className="muted">BASE管理画面への記録は「実績」です。BASE内の自動計測にはショップ側の計測タグ設置が必要です。</p></section>
+     <section className="ix-panel"><h2>自分の操作を除外</h2><label className="ix-check"><input type="checkbox" checked={excluded} onChange={e=>{try{localStorage.setItem('ws_analytics_exclude',e.target.checked?'1':'0');setExcluded(e.target.checked);}catch{setError('このブラウザでは除外設定を保存できません。');}}}/>このブラウザの今後の訪問・操作を除外する</label><p className="muted">設定したサイト・ブラウザに適用されます。HUBや試聴ページ、別端末はそれぞれの保存領域を使います。過去の記録は変更されません。</p></section>
+    </>}
+   </div>}
+   <footer className="ix-footer"><p className="muted">訪問者はサイトごとのブラウザ識別子で集計します。「すべて」では同じ人が複数サイト・端末で数えられる場合があります。SNSアプリ内の閲覧、追跡をブロックした訪問、計測開始前の未記録データは取得できません。流入元が送られない訪問は direct に含まれます。</p></footer>
+  </>}
+ </main>;
 }

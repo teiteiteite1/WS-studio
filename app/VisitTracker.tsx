@@ -1,40 +1,12 @@
 "use client";
-
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
-
-const SUPABASE_URL = "https://udjpqsmihauksbceaxww.supabase.co";
-const SUPABASE_KEY = "sb_publishable_vNHL7xgpDLBfYhTblDQUZg_us4Xbnss";
-
-function visitorId() {
-  const key = "ws_visitor_id";
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
-
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { trackEvent } from './analytics-client';
 export default function VisitTracker() {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const id = visitorId();
-    fetch(`${SUPABASE_URL}/rest/v1/rpc/ws_record_visit`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        p_visitor_id: id,
-        p_path: pathname || "/",
-        p_referrer: document.referrer || null,
-      }),
-      keepalive: true,
-    }).catch(() => {});
-  }, [pathname]);
-
-  return null;
+  const pathname = usePathname(); const last = useRef<string|null>(null);
+  useEffect(()=>{ if (pathname && last.current !== pathname) { last.current=pathname; trackEvent('pageview'); } },[pathname]);
+  useEffect(()=>{
+    const click=(event:MouseEvent)=>{ const a=(event.target instanceof Element ? event.target.closest('a[href]') : null) as HTMLAnchorElement|null; if (!a || a.hasAttribute('download')) return; try { const u=new URL(a.href); if (!['https:','http:'].includes(u.protocol)) return; trackEvent(u.origin===location.origin?'internal_click':'outbound_click',a.getAttribute('aria-label') || a.textContent?.trim().slice(0,500),u.href); } catch {} };
+    document.addEventListener('click',click,true); return ()=>document.removeEventListener('click',click,true);
+  },[]); return null;
 }
