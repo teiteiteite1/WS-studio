@@ -15,15 +15,15 @@ Today / 7 days / 30 days / all time use JST. The existing period/source/campaign
 Daily SNS observations are stored per channel/date/source. Weekly and monthly charts use the last real observation in each bucket and label its real date. Missing values are null, never invented zeroes. A recorded zero remains zero. The UI distinguishes pre-acquisition, unconnected API, manual and unavailable measurements.
 
 ## Acquisition
-- Bluesky: public profile follower count, daily at 06:10 JST. Successful real snapshots verified for September 5 and 6, 2026 (1 follower each).
-- Instagram / Threads: provider handlers implemented, awaiting Insights connection and adequate follower-reading permissions. Existing successful Social Desk publishing credentials are separate; posting success does not prove follower access.
+- Bluesky: public profile follower count, daily at 06:10 JST. Successful real snapshots verified for September 5 and 6, 2026. Latest September 6 snapshot: 4 followers.
+- Instagram / Threads: existing credentials were validated server-side, and real snapshots were saved on September 6, 2026 at 12:42 JST: Instagram 34, Threads 30 followers. Both are enabled for daily acquisition. No owner token re-entry is needed. Publishing status remains separate from follower permissions.
 - Pinterest: user-account API handler implemented, awaiting approved API access and a valid token.
 - X / note / Suno: manual or dated CSV snapshots in this implementation; no paid integration added.
 - BASE: dated visits/orders/revenue can be entered manually. `ws-base-telemetry.js` is prepared for the existing shop only; no tag has been installed on BASE. Without a tag, direct SNS → BASE arrival metrics remain unavailable.
 - Native SNS impressions, unknown past followers, blocked tracking, cross-device identity and purchase attribution cannot be reconstructed.
 
 ## Owner setup after release
-1. Open INSIGHT → 接続・計測 → Social Deskから接続. Sign in to Social Desk with the existing owner account if asked. Existing Instagram / Threads tokens are transferred to the encrypted Insights store only after validation.
+1. Instagram / Threads / Bluesky are already acquiring followers. No connection step is currently necessary. Only if credentials later expire, open INSIGHT → 接続・計測 → Social Deskから接続 or enter a replacement token.
 2. If follower permissions are missing, reauthorize the corresponding provider with follower/insights read access. Do not share tokens in chat.
 3. Alternatively, INSIGHT → 接続・計測 → 認証トークンで接続する: select Instagram, Threads or Pinterest; paste that provider's valid token into アクセストークン; choose 接続して確認. Pinterest requires approved account API access. Tokens are not displayed again.
 4. X / note / unavailable SNS: INSIGHT → 記録 → SNSの実数を記録. Enter SNS, 記録日 and フォロワー, or import CSV using the downloadable header template. Leave unknown values blank.
@@ -43,6 +43,11 @@ HUB / Social Desk source tags were removed without changing access policy. Their
 - Corrected Social Desk production build passed before source push.
 - Live SQL rollback tests: owner RPC, denied anonymous/nonowner reads, denied internal inserts, internal history exclusion, public transition and source funnel. All fixture rows rolled back.
 - Local HTTP: anonymous `/api/stats` returns 401; internal `/api/track` returns 400; `/analytics` serves successfully.
-- Browser reached the corrected page but stayed at アカウントを確認しています in the supervised Next preview. Browser interaction and real owner-login QA remain blocked/unverified; do not release or call INSIGHT complete. SQL authorization tests do not substitute for a real owner sign-in.
+- Browser previously reached the corrected page but stayed at アカウントを確認しています. Added a 15-second limit to auth/refresh network requests and tested timeout recovery to the logged-out state. On resumption, browser navigation was explicitly rejected by the runtime URL security policy; no alternate browser route or workaround was attempted. Browser interaction and real owner-login QA remain unverified; do not release or call INSIGHT complete. SQL authorization tests do not substitute for a real owner sign-in.
 
 Identifiers are browser/site scoped, not unique people across sites. Referrer suppression can classify visits as direct. Queued events use receipt time. No sample values are shipped.
+
+## September 6 continuation
+The existing ws-insights-sync Edge Function (version 3) now checks first-time Instagram / Threads setup against the already connected account and reuses encrypted credentials entirely server-side. It validates account identity and actual follower access before enabling sync or saving a real snapshot. It never returns credentials, overwrites an existing token, or reconnects an explicitly disconnected/previously attempted account automatically. Cron and owner authentication are unchanged. The existing popup connection is retained for optional reconnection.
+
+12 automated tests pass, including denied cross-account reuse, rejected provider permissions, preserved measured zero, non-overwrite of existing secrets, and aborted expired-session recovery. Live sync returned HTTP 200 / succeeded and persisted Instagram 34, Threads 30, Bluesky 4. Frontend remains in the existing draft PR, pending browser verification.

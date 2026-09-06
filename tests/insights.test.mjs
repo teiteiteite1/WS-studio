@@ -34,3 +34,27 @@ test('weekly/monthly follower series select recorded values, never invented zero
  assert.deepEqual(d.followerSeries(rows,'month'),[{day:'2026-08-02',value:2},{day:'2026-09-01',value:5}]);
  assert.equal(d.followerState({channel:'x',status:'manual',latest:null,first_observed_day:'2026-09-01'},'2026-08-01',[]),'取得開始前');
 });
+
+const reuse=await module(read('supabase/functions/ws-insights-sync/initial-connections.ts'));
+test('existing SNS connections are reused only on first setup and after real permission validation',async()=>{
+ const account={channel:'instagram',handle:'owner',status:'needs_connection',auto_enabled:false,last_attempt_at:null};
+ const connection={channel:'instagram',handle:'owner',status:'connected'};
+ assert.equal(reuse.canReuseConnection(account,connection),true);
+ for(const other of [{...account,last_attempt_at:'2026-09-06'},{...account,status:'expired'},{...account,auto_enabled:true}])assert.equal(reuse.canReuseConnection(other,connection),false);
+ assert.equal(reuse.canReuseConnection(account,{...connection,handle:'someone_else'}),false);
+ const saves=[];const io={existing:async()=>null,shared:async()=>'a'.repeat(30),measure:async()=>({followers:0,handle:'owner'}),saveToken:async()=>saves.push('token'),saveMeasurement:async()=>saves.push('measurement'),failure:async()=>({ok:false})};
+ const result=await reuse.reuseInitialConnections([account],[connection],io);
+ assert.deepEqual(saves,['token','measurement']);assert.deepEqual(result,{instagram:{ok:true,followers:0}});
+ saves.length=0;await reuse.reuseInitialConnections([account],[connection],{...io,existing:async()=>'existing'.repeat(5)});assert.deepEqual(saves,['measurement']);
+ saves.length=0;await reuse.reuseInitialConnections([account],[connection],{...io,measure:async()=>{throw Error('permission');}});assert.deepEqual(saves,[]);
+ await reuse.reuseInitialConnections([account],[connection],{...io,measure:async()=>({followers:9,handle:'someone_else'})});assert.deepEqual(saves,[]);
+});
+
+test('an expired session cannot leave account checking pending after an aborted refresh',async()=>{
+ const auth=await module(read('app/lib/personalSync.ts'));
+ const prior={fetch:globalThis.fetch,window:globalThis.window,localStorage:globalThis.localStorage};
+ const values=new Map([['ws-personal-session-v1',JSON.stringify({access_token:'expired-test',refresh_token:'test-refresh',expires_at:1,user:{id:'test-user'}})]]);
+ globalThis.window={};globalThis.localStorage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+ globalThis.fetch=async(_url,init)=>{assert.ok(init.signal);throw init.signal.reason;};
+ try{assert.equal(await auth.getValidSession(AbortSignal.abort(new Error('timeout'))),null);assert.equal(values.has('ws-personal-session-v1'),false);}finally{Object.assign(globalThis,prior);}
+});

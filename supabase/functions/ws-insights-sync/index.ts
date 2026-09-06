@@ -1,5 +1,6 @@
 // Supabase Edge Function. No analytics token is exposed to the browser.
 // @ts-nocheck
+import { reuseInitialConnections } from './initial-connections.ts';
 const base = Deno.env.get('SUPABASE_URL');
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const publicKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -67,7 +68,7 @@ Deno.serve(async(req:Request)=>{
    if(input.action==='disconnect'){
      if(isCron||!['instagram','threads','pinterest'].includes(input.channel))return reply({error:'invalid'},400);
      await db('rpc/ws_insights_secret_save',{method:'POST',body:JSON.stringify({p_name:`${input.channel}_token`,p_value:''})});
-     await db(`ws_social_accounts?channel=eq.${input.channel}`,{method:'PATCH',body:JSON.stringify({auto_enabled:false,status:'needs_connection',last_error:null})});return reply({ok:true});
+     await db(`ws_social_accounts?channel=eq.${input.channel}`,{method:'PATCH',body:JSON.stringify({auto_enabled:false,status:'needs_connection',last_attempt_at:new Date().toISOString(),last_error:null})});return reply({ok:true});
    }
    const cutoff=new Date(Date.now()-10*60_000).toISOString();
    await db(`ws_sync_runs?status=eq.running&started_at=lt.${cutoff}`,{method:'PATCH',body:JSON.stringify({status:'interrupted',finished_at:new Date().toISOString()})});
@@ -76,8 +77,23 @@ Deno.serve(async(req:Request)=>{
    const run=crypto.randomUUID();try{await db('ws_sync_runs',{method:'POST',body:JSON.stringify({id:run})});}catch{return reply({error:'別の更新が進行中です。'},409);}
    const outcomes={};
    try{
+     // Existing verified posting connections can initialize follower access server-side.
+     // Provider identity and actual follower permission are validated before any save.
+     const initial=await db('ws_social_accounts?status=eq.needs_connection&auto_enabled=eq.false&last_attempt_at=is.null');
+     if(initial.some(a=>['instagram','threads'].includes(a.channel))){
+       const connections=await db('ws_social_connections?status=eq.connected&select=channel,status,handle');
+       Object.assign(outcomes,await reuseInitialConnections(initial,connections,{
+         existing:channel=>secret(`${channel}_token`),
+         shared:channel=>db('rpc/ws_social_secret',{method:'POST',body:JSON.stringify({p_name:`${channel}_token`})}),
+         measure,
+         saveToken:(channel,token)=>db('rpc/ws_insights_secret_save',{method:'POST',body:JSON.stringify({p_name:`${channel}_token`,p_value:token})}),
+         saveMeasurement,
+         failure:async(account,e)=>{const status=e instanceof ProviderError?e.status:'error';await db(`ws_social_accounts?channel=eq.${account.channel}`,{method:'PATCH',body:JSON.stringify({status,last_attempt_at:new Date().toISOString(),last_error:e instanceof ProviderError?e.message:'既存接続を確認できません。接続画面から再確認してください。'})});return {ok:false,status};}
+       }));
+     }
+
      const accounts=await db('ws_social_accounts?auto_enabled=eq.true&order=sort_order');
-     for(const account of accounts){try{const token=account.channel==='bluesky'?undefined:await secret(`${account.channel}_token`);const m=await measure(account,token);await saveMeasurement(account,m);outcomes[account.channel]={ok:true,followers:m.followers};}
+     for(const account of accounts){if(outcomes[account.channel]?.ok)continue;try{const token=account.channel==='bluesky'?undefined:await secret(`${account.channel}_token`);const m=await measure(account,token);await saveMeasurement(account,m);outcomes[account.channel]={ok:true,followers:m.followers};}
        catch(e){const status=e instanceof ProviderError?e.status:'error';const message=e instanceof ProviderError?e.message:'保存または通信に失敗しました。次回更新時に再試行します。';outcomes[account.channel]={ok:false,status};await db(`ws_social_accounts?channel=eq.${account.channel}`,{method:'PATCH',body:JSON.stringify({status,last_attempt_at:new Date().toISOString(),last_error:message})});}}
      const status=Object.values(outcomes).every(x=>x.ok)?'succeeded':'partial';
      await db(`ws_sync_runs?id=eq.${run}`,{method:'PATCH',body:JSON.stringify({status,finished_at:new Date().toISOString(),result:outcomes})});return reply({ok:true,status,result:outcomes});
