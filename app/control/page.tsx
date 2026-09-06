@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import ShafuClient from "./ShafuClient";
 
 export const metadata: Metadata = {
-  title: "WS studio CONTROL",
+  title: "SHAFU · WS studio",
+  description: "社不ちゃん専用の動画制作・ストーリー管理システム",
   robots: { index: false, follow: false },
 };
 
 export default function ControlPage() {
-  redirect("/control/index.html");
+  return <ShafuClient />;
 }

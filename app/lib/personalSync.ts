@@ -1,7 +1,7 @@
 "use client";
 
-const SUPABASE_URL = "https://udjpqsmihauksbceaxww.supabase.co";
-const SUPABASE_KEY = "sb_publishable_vNHL7xgpDLBfYhTblDQUZg_us4Xbnss";
+export const SUPABASE_URL = "https://udjpqsmihauksbceaxww.supabase.co";
+export const SUPABASE_KEY = "sb_publishable_vNHL7xgpDLBfYhTblDQUZg_us4Xbnss";
 const SESSION_KEY = "ws-personal-session-v1";
 
 export type PersonalSession = {

@@ -5,9 +5,10 @@ import { getValidSession, PersonalSession, signIn, signOutLocal, signUp } from "
 
 type Props = {
   onSessionChange?: (session: PersonalSession | null) => void;
+  description?: string;
 };
 
-export default function SyncAccount({ onSessionChange }: Props) {
+export default function SyncAccount({ onSessionChange, description }: Props) {
   const [session, setSession] = useState<PersonalSession | null>(null);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -83,7 +84,7 @@ export default function SyncAccount({ onSessionChange }: Props) {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password (6文字以上)" autoComplete={mode === "login" ? "current-password" : "new-password"} />
           {message && <p>{message}</p>}
           <button type="button" className="sync-submit" onClick={() => void submit()} disabled={busy}>{busy ? "処理中" : mode === "login" ? "ログイン" : "登録"}</button>
-          <small>同じアカウントでログインすると、iPhoneとMacの既読・学習進捗が同期されます。</small>
+          <small>{description || "同じアカウントでログインすると、iPhoneとMacの既読・学習進捗が同期されます。"}</small>
         </div>
       )}
     </div>

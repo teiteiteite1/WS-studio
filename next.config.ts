@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "baseec-img-mng.akamaized.net",
         pathname: "/images/item/**",
       },
+      {
+        protocol: "https",
+        hostname: "udjpqsmihauksbceaxww.supabase.co",
+        pathname: "/storage/v1/**",
+      },
     ],
   },
 };
