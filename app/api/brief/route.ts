@@ -55,6 +55,17 @@ const AI_FEEDS: Array<{ beat: NewsBeat; query: string; locale?: "ja" }> = [
   { beat: "policy", locale: "ja", query: '(生成AI OR 人工知能) (著作権 OR 規制 OR 法律 OR 提携 OR 買収) when:4d' },
 ];
 
+const DIRECT_FEEDS: Array<{ beat: NewsBeat; source: string; url: string; filter?: RegExp }> = [
+  { beat: "frontier", source: "OpenAI", url: "https://openai.com/news/rss.xml" },
+  { beat: "research", source: "Google DeepMind", url: "https://deepmind.google/blog/rss.xml" },
+  { beat: "business", source: "Microsoft", url: "https://blogs.microsoft.com/feed/", filter: /\bAI\b|artificial intelligence|Copilot|agent|model/i },
+  { beat: "infrastructure", source: "NVIDIA", url: "https://blogs.nvidia.com/feed/", filter: /\bAI\b|artificial intelligence|GPU|robot|model|agent/i },
+  { beat: "business", source: "TechCrunch", url: "https://techcrunch.com/category/artificial-intelligence/feed/" },
+  { beat: "frontier", source: "The Verge", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
+  { beat: "research", source: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/technology-lab", filter: /\bAI\b|artificial intelligence|OpenAI|Gemini|Claude|model|agent|robot/i },
+  { beat: "research", source: "Nature", url: "https://www.nature.com/subjects/machine-learning.rss" },
+];
+
 function cleanText(value: string) {
   return value
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -148,6 +159,35 @@ async function fetchFeed(feed: (typeof AI_FEEDS)[number]): Promise<NewsCandidate
   }
 }
 
+function feedLink(block: string) {
+  const textLink = tag(block, "link");
+  if (textLink) return textLink;
+  const attributeLink = block.match(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/i)?.[1] ?? "";
+  return cleanText(attributeLink);
+}
+
+async function fetchDirectFeed(feed: (typeof DIRECT_FEEDS)[number]): Promise<NewsCandidate[]> {
+  try {
+    const response = await fetch(feed.url, {
+      headers: { "User-Agent": "WS-studio-Brief/3.0 (+https://ws-studio-wheat.vercel.app/brief)", Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" },
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(7_000),
+    });
+    if (!response.ok) return [];
+    const xml = await response.text();
+    const blocks = xml.match(/<(?:item|entry)\b[\s\S]*?<\/(?:item|entry)>/gi) ?? [];
+    const cutoff = Date.now() - 5 * 86_400_000;
+    return blocks.slice(0, 40).map((block) => {
+      const title = tag(block, "title");
+      const publishedAt = safeDate(tag(block, "pubDate") || tag(block, "published") || tag(block, "updated") || tag(block, "date"));
+      const description = tag(block, "description") || tag(block, "summary") || tag(block, "content");
+      return { title, source: feed.source, url: feedLink(block), publishedAt, description, beat: feed.beat };
+    }).filter((item) => item.title && item.url && Date.parse(item.publishedAt) >= cutoff && (!feed.filter || feed.filter.test(`${item.title} ${item.description}`)));
+  } catch {
+    return [];
+  }
+}
+
 function extractArticleText(html: string) {
   const clean = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<nav[\s\S]*?<\/nav>/gi, " ").replace(/<footer[\s\S]*?<\/footer>/gi, " ");
   const scope = clean.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ?? clean.match(/<main\b[\s\S]*?<\/main>/i)?.[0] ?? clean;
@@ -171,8 +211,11 @@ async function hydrateNews(items: Item[]) {
 }
 
 async function fetchAINews(): Promise<Item[]> {
-  const feeds = await Promise.all(AI_FEEDS.map(fetchFeed));
-  const selected = selectAINews(feeds.flat());
+  const [queryFeeds, directFeeds] = await Promise.all([
+    Promise.all(AI_FEEDS.map(fetchFeed)),
+    Promise.all(DIRECT_FEEDS.map(fetchDirectFeed)),
+  ]);
+  const selected = selectAINews([...queryFeeds.flat(), ...directFeeds.flat()]);
   const items: Item[] = selected.map((candidate) => {
     const fallback = sentenceSummary(candidate.description ?? "", "見出しと情報源を取得しました。詳細を開くと、確認できた内容から日本語の要点を作成します。");
     const relatedLessons = relatedLessonsFor(`${candidate.title} ${candidate.description ?? ""}`);
