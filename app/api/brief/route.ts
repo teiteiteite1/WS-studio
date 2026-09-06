@@ -176,7 +176,7 @@ async function fetchDirectFeed(feed: (typeof DIRECT_FEEDS)[number]): Promise<New
     if (!response.ok) return [];
     const xml = await response.text();
     const blocks = xml.match(/<(?:item|entry)\b[\s\S]*?<\/(?:item|entry)>/gi) ?? [];
-    const cutoff = Date.now() - 5 * 86_400_000;
+    const cutoff = Date.now() - 7 * 86_400_000;
     return blocks.slice(0, 40).map((block) => {
       const title = tag(block, "title");
       const publishedAt = safeDate(tag(block, "pubDate") || tag(block, "published") || tag(block, "updated") || tag(block, "date"));

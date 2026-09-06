@@ -97,11 +97,16 @@ function keywordScore(value: string, terms: Array<[RegExp, number]>) {
 }
 
 export function rankCandidate(candidate: NewsCandidate, now = Date.now()): RankedNewsCandidate {
-  const text = `${candidate.title} ${candidate.source}`;
+  const text = `${candidate.title} ${candidate.description ?? ""} ${candidate.source}`;
   const sourceType = sourceTypeFor(candidate.source);
   const company = companyFor(text);
   let industryScore = 30;
   let creatorScore = 20;
+
+  if (candidate.beat === "frontier") industryScore += 5;
+  if (candidate.beat === "research") industryScore += 8;
+  if (candidate.beat === "infrastructure" || candidate.beat === "policy") industryScore += 6;
+  if (candidate.beat === "creative") creatorScore += 9;
 
   industryScore += keywordScore(text, [
     [/introduc|launch|release|unveil|available|debut|preview/i, 11],
@@ -114,8 +119,8 @@ export function rankCandidate(candidate: NewsCandidate, now = Date.now()): Ranke
     [/\bgpu\b|semiconductor|chip|data center|robot/i, 6],
   ]);
   if (company !== "Other") industryScore += 7;
-  if (sourceType === "PRIMARY") industryScore += 13;
-  if (sourceType === "REPORTING") industryScore += 7;
+  if (sourceType === "PRIMARY") industryScore += 15;
+  if (sourceType === "REPORTING") industryScore += 9;
   if (LOW_QUALITY.test(text)) industryScore -= 28;
 
   creatorScore += keywordScore(text, [
@@ -128,7 +133,7 @@ export function rankCandidate(candidate: NewsCandidate, now = Date.now()): Ranke
   ]);
 
   const ageHours = Math.max(0, (now - Date.parse(candidate.publishedAt)) / 3_600_000);
-  if (ageHours > 72) industryScore -= Math.min(16, (ageHours - 72) / 12);
+  if (ageHours > 96) industryScore -= Math.min(18, (ageHours - 96) / 12);
   if (ageHours < 24) industryScore += 3;
 
   industryScore = clamp(industryScore);
@@ -199,7 +204,7 @@ export function dedupeCandidates(candidates: RankedNewsCandidate[]) {
 }
 
 export function selectAINews(candidates: NewsCandidate[], now = Date.now()) {
-  const pool = dedupeCandidates(candidates.map((candidate) => rankCandidate(candidate, now))).filter((candidate) => candidate.score >= 49);
+  const pool = dedupeCandidates(candidates.map((candidate) => rankCandidate(candidate, now))).filter((candidate) => candidate.score >= 42);
   const selected: RankedNewsCandidate[] = [];
   const remaining = [...pool];
   const companyCounts = new Map<string, number>();
@@ -227,7 +232,7 @@ export function selectAINews(candidates: NewsCandidate[], now = Date.now()) {
 }
 
 export function importanceFor(score: number): "CRITICAL" | "HIGH" | "MEDIUM" {
-  return score >= 80 ? "CRITICAL" : score >= 62 ? "HIGH" : "MEDIUM";
+  return score >= 76 ? "CRITICAL" : score >= 58 ? "HIGH" : "MEDIUM";
 }
 
 export function relatedLessonsFor(value: string, max = 2): RelatedLesson[] {
