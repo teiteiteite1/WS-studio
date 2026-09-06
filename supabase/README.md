@@ -19,7 +19,7 @@ Daily SNS observations are stored per channel/date/source. Weekly and monthly ch
 - Instagram / Threads: existing credentials were validated server-side, and real snapshots were saved on September 6, 2026 at 12:42 JST: Instagram 34, Threads 30 followers. Both are enabled for daily acquisition. No owner token re-entry is needed. Publishing status remains separate from follower permissions.
 - Pinterest: user-account API handler implemented, awaiting approved API access and a valid token.
 - X / note / Suno: manual or dated CSV snapshots in this implementation; no paid integration added.
-- BASE: dated visits/orders/revenue can be entered manually. `ws-base-telemetry.js` is prepared for the existing shop only; no tag has been installed on BASE. Without a tag, direct SNS → BASE arrival metrics remain unavailable.
+- BASE: dated visits/orders/revenue can be entered manually. `ws-base-telemetry.js` is prepared for the existing shop only; the owner installed the tag, and production HTML on both the shop home and product page was verified on September 6. No real BASE visit has yet been received; unreceived metrics remain unavailable.
 - Native SNS impressions, unknown past followers, blocked tracking, cross-device identity and purchase attribution cannot be reconstructed.
 
 ## Owner setup after release
@@ -41,7 +41,7 @@ HUB version 6 and Social Desk version 22 were successfully published privately a
 
 Browser-only acceptance is deferred by the owner's explicit instruction to release based on builds, tests, DB and HTTP validation. The runtime browser URL policy remains blocked. This is not an API-key requirement or a pending deployment approval. Full UI acceptance is still unverified and must not be described as tested.
 
-BASE's collector is available but installation in the owner's BASE theme has not been performed; direct BASE arrivals remain unmeasured. Pinterest still requires approved credentials. Existing manual/CSV entry remains available. Neither condition blocks the released Official/SNS dashboard.
+BASE's collector is installed and verified in production HTML. Direct BASE arrivals remain unmeasured until the first eligible real browser visit. Pinterest is deferred as external API connection pending and does not block operational acceptance. Existing manual/CSV entry remains available. Neither condition blocks the released Official/SNS dashboard.
 
 ## Validation
 - `node --test tests/insights.test.mjs`: CSV, null vs zero, dates, retries, API auth, private paths and targets, daily/weekly/monthly follower observations.
@@ -57,3 +57,10 @@ Identifiers are browser/site scoped, not unique people across sites. Referrer su
 The existing ws-insights-sync Edge Function (version 3) now checks first-time Instagram / Threads setup against the already connected account and reuses encrypted credentials entirely server-side. It validates account identity and actual follower access before enabling sync or saving a real snapshot. It never returns credentials, overwrites an existing token, or reconnects an explicitly disconnected/previously attempted account automatically. Cron and owner authentication are unchanged. The existing popup connection is retained for optional reconnection.
 
 12 automated tests pass, including denied cross-account reuse, rejected provider permissions, preserved measured zero, non-overwrite of existing secrets, and aborted expired-session recovery. Live sync returned HTTP 200 / succeeded and persisted Instagram 34, Threads 30, Bluesky 4. Frontend is now in production after merging the existing PR. Browser-only checks remain deferred.
+
+## BASE installation verification and revised acceptance
+The owner confirmed installation on September 6. Production GETs for the shop home and `/items/152969255` returned 200 with the correct script tag, and the script asset returned 200 with JavaScript content type. The shop CSP does not block scripts or connections. A clearly identified synthetic event sent through the public REST endpoint returned 201 with the shop Origin allowed by CORS; the event was present in the owner dashboard's BASE source aggregation. That exact test row was deleted immediately afterward and its absence verified. It is not counted as a real visit. There were no real BASE events at the time of this check.
+
+Three collector execution tests cover attribution/session continuity, private/bot exclusions and duplicate initialization. All 15 tests pass. The dashboard now initially selects all public sites, labels disconnected Pinterest as 外部API接続待ち, and distinguishes waiting for the first BASE event from an uninstalled tag. No collector, DB schema, private tool access or Now Generating change is needed.
+
+The owner's revised acceptance explicitly excludes pending Pinterest authentication from completion gates. Implementation and API/DB checks can be accepted independently of that connection. Browser-only acceptance remains unverified because of the previously recorded browser policy restriction. The remaining real-world check is an ordinary browser visit to the BASE shop, followed by confirming receipt and display in INSIGHT; no tag reinstallation or new API credential is needed for BASE. Do not describe the synthetic smoke test as real visitor traffic.
