@@ -33,9 +33,15 @@ Daily SNS observations are stored per channel/date/source. Weekly and monthly ch
 ## Database and release state
 `sql/insights.sql` is the repeatable reconciled schema, ending with the authoritative public-only correction. `sql/public-scope.sql` contains the collection guards, `sql/dashboard.sql` the reused RPC. The CLI-generated `migrations/20260905215957_insights_public_activity_scope.sql` records the correction SQL applied through the database connector. Existing cron and Vault secrets are unchanged.
 
-The corrected source is not yet released. Keep PR #1 as the same draft until owner-session UI verification and release checks finish. At official release, apply `sql/finalize_privacy.sql` to retire the old public stats RPCs immediately; it is intentionally pending because the old live frontend still depends on them. The new owner-only aggregate is already protected. Do not describe all historic RPC access as private until this finalization has run.
+The corrected Official Site source was merged through PR #1 and deployed to the existing production URL on September 6, 2026. GitHub's Vercel production check succeeded. Independent production HTTP checks confirmed `/analytics` = 200 with noindex, anonymous `/api/stats` = 401, internal-page `/api/track` = 400 with no inserted test row, the retired telemetry asset = inert 200, and the BASE collector asset = 200.
 
-HUB / Social Desk source tags were removed without changing access policy. Their saved versions must match corrected source before a later authorized release. Never deploy the old Now Generating Insights version.
+`sql/finalize_privacy.sql` has been applied. Client execution of both legacy stats RPCs is revoked for PUBLIC, anon and authenticated; anonymous access to legacy tables/view is revoked. Existing rows and functions are retained. The new owner dashboard RPC still returns correct real data. The reconciled schema now ends with these final restrictions, so replaying it does not reopen the retired APIs.
+
+HUB version 6 and Social Desk version 22 were successfully published privately at their existing URLs. Source inspection confirms both exclude Insights telemetry; Social Desk's newer Bluesky/AI-disclosure work is preserved. Their access policy revisions remain unchanged. Now Generating was not deployed or changed in this release; only the earlier task-added source instrumentation was reverted.
+
+Browser-only acceptance is deferred by the owner's explicit instruction to release based on builds, tests, DB and HTTP validation. The runtime browser URL policy remains blocked. This is not an API-key requirement or a pending deployment approval. Full UI acceptance is still unverified and must not be described as tested.
+
+BASE's collector is available but installation in the owner's BASE theme has not been performed; direct BASE arrivals remain unmeasured. Pinterest still requires approved credentials. Existing manual/CSV entry remains available. Neither condition blocks the released Official/SNS dashboard.
 
 ## Validation
 - `node --test tests/insights.test.mjs`: CSV, null vs zero, dates, retries, API auth, private paths and targets, daily/weekly/monthly follower observations.
@@ -43,11 +49,11 @@ HUB / Social Desk source tags were removed without changing access policy. Their
 - Corrected Social Desk production build passed before source push.
 - Live SQL rollback tests: owner RPC, denied anonymous/nonowner reads, denied internal inserts, internal history exclusion, public transition and source funnel. All fixture rows rolled back.
 - Local HTTP: anonymous `/api/stats` returns 401; internal `/api/track` returns 400; `/analytics` serves successfully.
-- Browser previously reached the corrected page but stayed at アカウントを確認しています. Added a 15-second limit to auth/refresh network requests and tested timeout recovery to the logged-out state. On resumption, browser navigation was explicitly rejected by the runtime URL security policy; no alternate browser route or workaround was attempted. Browser interaction and real owner-login QA remain unverified; do not release or call INSIGHT complete. SQL authorization tests do not substitute for a real owner sign-in.
+- Browser previously reached the corrected page but stayed at アカウントを確認しています. Added a 15-second limit to auth/refresh network requests and tested timeout recovery to the logged-out state. On resumption, browser navigation was explicitly rejected by the runtime URL security policy; no alternate browser route or workaround was attempted. Browser interaction and real owner-login QA remain unverified; release was authorized using the successful non-browser checks, but full INSIGHT acceptance is not claimed. SQL authorization tests do not substitute for a real owner sign-in.
 
 Identifiers are browser/site scoped, not unique people across sites. Referrer suppression can classify visits as direct. Queued events use receipt time. No sample values are shipped.
 
 ## September 6 continuation
 The existing ws-insights-sync Edge Function (version 3) now checks first-time Instagram / Threads setup against the already connected account and reuses encrypted credentials entirely server-side. It validates account identity and actual follower access before enabling sync or saving a real snapshot. It never returns credentials, overwrites an existing token, or reconnects an explicitly disconnected/previously attempted account automatically. Cron and owner authentication are unchanged. The existing popup connection is retained for optional reconnection.
 
-12 automated tests pass, including denied cross-account reuse, rejected provider permissions, preserved measured zero, non-overwrite of existing secrets, and aborted expired-session recovery. Live sync returned HTTP 200 / succeeded and persisted Instagram 34, Threads 30, Bluesky 4. Frontend remains in the existing draft PR, pending browser verification.
+12 automated tests pass, including denied cross-account reuse, rejected provider permissions, preserved measured zero, non-overwrite of existing secrets, and aborted expired-session recovery. Live sync returned HTTP 200 / succeeded and persisted Instagram 34, Threads 30, Bluesky 4. Frontend is now in production after merging the existing PR. Browser-only checks remain deferred.
