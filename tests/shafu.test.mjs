@@ -67,6 +67,11 @@ test("idea becomes a linked project and respects the selected default video mode
   assert.equal(project.stage, "idea");
 });
 
+test("prompt duration options keep the numeric project duration", () => {
+  const clientSource = readFileSync(new URL("../app/control/ShafuClient.tsx", import.meta.url), "utf8");
+  assert.match(clientSource, /<option key=\{n\} value=\{n\}>\{n\} sec<\/option>/);
+});
+
 test("AI route requires a key before any generation", async () => {
   const response = await POST(request("ideas_generate", {}, false));
   assert.equal(response.status, 401);
