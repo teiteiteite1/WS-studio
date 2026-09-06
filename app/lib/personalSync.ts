@@ -29,11 +29,12 @@ export function loadSession(): PersonalSession | null {
   }
 }
 
-async function authRequest(path: string, body: Record<string, unknown>) {
+async function authRequest(path: string, body: Record<string, unknown>, signal?: AbortSignal) {
   const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: signal ?? AbortSignal.timeout(15000),
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload?.msg || payload?.error_description || payload?.message || "認証に失敗しました");
@@ -52,19 +53,19 @@ export async function signIn(email: string, password: string) {
   return payload;
 }
 
-export async function refreshSession(session: PersonalSession) {
-  const payload = (await authRequest("token?grant_type=refresh_token", { refresh_token: session.refresh_token })) as PersonalSession;
+export async function refreshSession(session: PersonalSession, signal?: AbortSignal) {
+  const payload = (await authRequest("token?grant_type=refresh_token", { refresh_token: session.refresh_token }, signal)) as PersonalSession;
   saveSession(payload);
   return payload;
 }
 
-export async function getValidSession() {
+export async function getValidSession(signal?: AbortSignal) {
   const session = loadSession();
   if (!session) return null;
   const expiresAt = session.expires_at ?? 0;
   if (expiresAt && expiresAt * 1000 > Date.now() + 60_000) return session;
   try {
-    return await refreshSession(session);
+    return await refreshSession(session, signal);
   } catch {
     saveSession(null);
     return null;

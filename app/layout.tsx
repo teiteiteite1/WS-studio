@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import PublicAnalytics from "./PublicAnalytics";
 import MusicPlayerProvider from "./MusicPlayerProvider";
 import VisitTracker from "./VisitTracker";
 import "./globals.css";
@@ -146,8 +146,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
         <VisitTracker />
         <MusicPlayerProvider>{children}</MusicPlayerProvider>
-        <Script id="vercel-analytics-init" strategy="afterInteractive">{`window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };`}</Script>
-        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
+        <PublicAnalytics />
       </body>
     </html>
   );

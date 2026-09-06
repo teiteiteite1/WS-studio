@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { trackEvent } from "./analytics-client";
 
 export type ShopProduct = { title: string; price: string; image: string; url: string };
 
@@ -24,7 +23,7 @@ export default function ShopGrid({ products }: { products: readonly ShopProduct[
 
   return <div className="shop-grid">{visibleProducts.map((product) => (
     <article className="shop-card" key={product.url}>
-      <a href={product.url} target="_blank" rel="noreferrer" onClick={() => trackEvent("shop_click", product.title)}>
+      <a href={product.url} target="_blank" rel="noreferrer" >
         <div className="shop-image"><Image src={product.image} alt={product.title} fill sizes="(max-width: 640px) 33vw, (max-width: 1100px) 50vw, 33vw" /></div>
         <div className="shop-meta"><h3>{product.title}</h3><p>{product.price}</p></div>
       </a>

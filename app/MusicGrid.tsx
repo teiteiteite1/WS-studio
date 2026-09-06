@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useMusicPlayer } from "./MusicPlayerProvider";
-import { trackEvent } from "./analytics-client";
 
 export type MusicTrack = { title: string; artwork: string; spotifyUrl: string; previewUrl: string };
 
@@ -39,7 +38,7 @@ export default function MusicGrid({ tracks, randomize = false, limit }: { tracks
               <a href={track.spotifyUrl} target="_blank" rel="noreferrer" aria-label={`${track.title} on Spotify`}>
                 <Image src={track.artwork} alt={`${track.title} cover artwork`} fill sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw" />
               </a>
-              <button className="music-play" type="button" onClick={() => { if (!trackIsPlaying) trackEvent("music_play", track.title); playTrack(track, tracks); }} aria-label={trackIsPlaying ? `Pause ${track.title}` : `Play ${track.title}`}>
+              <button className="music-play" type="button" onClick={() => { playTrack(track, tracks); }} aria-label={trackIsPlaying ? `Pause ${track.title}` : `Play ${track.title}`}>
                 {trackIsPlaying ? <span className="pause-icon" aria-hidden="true"><i /><i /></span> : <span className="play-icon" aria-hidden="true" />}
               </button>
             </div>
