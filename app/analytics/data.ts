@@ -1,9 +1,9 @@
 export const CHANNELS = ['x','instagram','threads','bluesky','pinterest','note','suno'] as const;
-export const SITES: Record<string,string> = {official:'公式サイト',workspace:'管理ページ',hub:'HUB',album:'試聴ページ',base:'BASE',social:'Social Desk',all:'すべて'};
-export const STATUS: Record<string,string> = {ok:'自動取得中',manual:'手入力・CSV',needs_connection:'接続待ち',needs_permission:'権限の確認が必要',expired:'再接続が必要',error:'取得に失敗',disabled:'自動取得停止'};
+export const SITES: Record<string,string> = {official:'Official Site',base:'BASE',all:'公開サイト全体'};
+export const STATUS: Record<string,string> = {ok:'自動取得中',manual:'手入力・CSV',needs_connection:'API未接続',needs_permission:'権限の確認が必要',expired:'再接続が必要',error:'取得に失敗',disabled:'自動取得停止'};
 export const EVENTS: Record<string,string> = {gallery_open:'作品を開く',music_play:'音楽再生',contact_sent:'お問い合わせ送信',shop_click:'ショップへのクリック（旧計測）',social_click:'SNSへのクリック（旧計測）',outbound_click:'外部リンク',internal_click:'サイト内リンク'};
 export type Snapshot = {channel:string;day:string;followers:number|null;reach?:number|null;reactions?:number|null;period_start?:string|null;period_end?:string|null;source:string;observed_at?:string;note?:string};
-export type Account = {channel:string;label:string;handle:string;profile_url:string;status:string;auto_enabled:boolean;last_attempt_at:string|null;last_success_at:string|null;last_error:string|null;latest:Snapshot|null};
+export type Account = {channel:string;label:string;handle:string;profile_url:string;status:string;auto_enabled:boolean;last_attempt_at:string|null;last_success_at:string|null;last_error:string|null;first_observed_day?:string|null;latest:Snapshot|null};
 export type Stats = {
  range:{start:string;end:string;site:string;timezone:string};
  summary:{visitors:number;pageviews:number;sessions:number;actions:number;previous_visitors:number;previous_pageviews:number;tracked_session_views:number;legacy_views:number;shop_sessions:number;active_last_5m:number};
@@ -18,7 +18,10 @@ export type Stats = {
  social:Account[];history:Snapshot[];records:Snapshot[];baseline:Snapshot[];
  shop:{day:string;visits:number|null;orders:number|null;revenue:number|null;note:string}[];
  coverage:{site:string;first_at:string;last_at:string;pageviews:number}[];
- sync:{status:string;started_at:string;finished_at:string|null}|null;generated_at:string;
+ sync:{status:string;started_at:string;finished_at:string|null}|null;generated_at:string;tracking_started_at:string|null;
+ transitions:{from_path:string;to_path:string;views:number}[];
+ funnel:{source:string;official_sessions:number;base_click_sessions:number}[];
+ base_sources:{source:string;pageviews:number;visitors:number;sessions:number}[];
 };
 export function today() { return new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
 export function shift(day:string,n:number) { return new Date(Date.parse(day+'T00:00:00Z')+n*86400000).toISOString().slice(0,10); }
@@ -48,4 +51,20 @@ export function importFollowers(text:string):Snapshot[] {
    if(!CHANNELS.includes(channel as typeof CHANNELS[number])||!validDay(day)||followers==null)throw new Error((i+2)+'行目のSNS・日付・フォロワー数を確認してください。');
    result.set(channel+day,{channel,day,followers,source:'manual',note:(r[n]||'').slice(0,1000)});
  });if(!result.size)throw new Error('取り込める記録がありません。');return [...result.values()];
+}
+
+export function followerSeries(rows:Snapshot[],period:'day'|'week'|'month') {
+ const groups=new Map<string,Snapshot>();
+ for(const r of [...rows].sort((a,b)=>a.day.localeCompare(b.day))){
+  if(r.followers===null)continue;
+  const d=new Date(r.day+'T00:00:00Z');
+  const bucket=period==='month'?r.day.slice(0,7):period==='week'?shift(r.day,-((d.getUTCDay()+6)%7)):r.day;
+  groups.set(bucket,r);
+ }
+ return [...groups.values()].map(r=>({day:r.day,value:r.followers}));
+}
+export function followerState(account:Account,end:string,history:Snapshot[]) {
+ if(account.latest)return account.latest.source==='api'?'実データ / 自動取得':account.latest.source==='legacy'?'実データ / 移行記録':'実データ / 手入力';
+ if((account.first_observed_day&&account.first_observed_day>end)||history.some(r=>r.channel===account.channel&&r.day>end))return '取得開始前';
+ return account.status==='manual'?'未取得 / 手入力で補完':account.status==='needs_connection'?'API未接続':'未取得';
 }

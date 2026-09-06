@@ -1,5 +1,16 @@
 export const KINDS = ['pageview','outbound_click','internal_click','gallery_open','music_play','contact_sent'] as const;
-export function siteForPath(path: string) { return /^\/(analytics|brief|learn|control)(\/|$)/.test(path) ? 'workspace' : 'official'; }
+export function isPublicPath(path: string) {
+  try { path = decodeURIComponent(path.split(/[?#]/)[0]).toLowerCase(); } catch { return false; }
+  return path.startsWith('/') && !/^\/(analytics|insights?|hub|social-desk|social|control|brief|learn|ai30|ai-30|counter|admin|api|_next|cart|checkout|mypage|account)(\/|$)/.test(path);
+}
+export function siteForPath(path: string) { return isPublicPath(path) ? 'official' : 'excluded'; }
+export function isPublicTarget(value: unknown) {
+  if (value == null) return true;
+  try { const u=new URL(String(value));
+    if (['ws-studio-hub.wsstudio.chatgpt.site','ws-social-desk.wsstudio.chatgpt.site','now-generating-album.wsstudio.chatgpt.site'].includes(u.hostname)) return false;
+    return u.hostname !== 'ws-studio-wheat.vercel.app' || isPublicPath(u.pathname);
+  } catch { return false; }
+}
 export function safeUrl(value: unknown) {
   if (typeof value !== 'string' || !value) return null;
   try { const u = new URL(value); if (!['http:','https:'].includes(u.protocol)) return null; return (u.origin + u.pathname).slice(0,1000); } catch { return null; }
@@ -14,8 +25,6 @@ export function sourceFor(referrer: string) {
   if (match('pinterest.com') || match('pin.it')) return 'pinterest';
   if (match('note.com')) return 'note';
   if (match('google.com') || match('google.co.jp')) return 'google';
-  if (host === 'ws-studio-hub.wsstudio.chatgpt.site') return 'hub';
-  if (host === 'now-generating-album.wsstudio.chatgpt.site') return 'album';
   return host.slice(0,100);
 }
 const short = (v: unknown, n: number) => typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g,'').slice(0,n) || null : null;
@@ -26,6 +35,7 @@ export function cleanActivity(input: unknown) {
   for (const k of ['visitor_id','session_id']) if (typeof a[k] !== 'string' || a[k].length < 8 || a[k].length > 128) return null;
   if (typeof a.path !== 'string' || !a.path.startsWith('/') || !KINDS.includes(a.kind as typeof KINDS[number])) return null;
   const path = a.path.split(/[?#]/)[0].slice(0,500);
+  if (!isPublicPath(path) || !isPublicTarget(a.target) || !isPublicTarget(a.referrer)) return null;
   return { id:a.id, visitor_id:a.visitor_id, session_id:a.session_id, site:siteForPath(path), path, kind:a.kind,
     value:short(a.value,500), target:safeUrl(a.target), referrer:safeUrl(a.referrer)?.slice(0,500) || null,
     source:short(a.source,100) || 'direct', medium:short(a.medium,100), campaign:short(a.campaign,200), content:short(a.content,200),
