@@ -1,3 +1,5 @@
+import { NEWS_TOPICS } from "../learn/newsTopics.mjs";
+
 export type NewsBeat = "frontier" | "creative" | "infrastructure" | "research" | "policy" | "business";
 
 export type RelatedLesson = {
@@ -236,8 +238,18 @@ export function importanceFor(score: number): "CRITICAL" | "HIGH" | "MEDIUM" {
 }
 
 export function relatedLessonsFor(value: string, max = 2): RelatedLesson[] {
-  return TOPIC_RULES
-    .filter((rule) => rule.re.test(value))
+  const normalized = value.toLowerCase();
+  const vocabularyMatches = NEWS_TOPICS.flatMap((topic) => {
+    const term = topic.terms.find((term) => {
+      const needle = term.toLowerCase();
+      if (/[^\x00-\x7f]/.test(needle)) return normalized.includes(needle);
+      // Avoid matching short English terms inside unrelated words.
+      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, "i").test(value);
+    });
+    return term ? [{ day: topic.day, title: topic.title, term, weight: 5 }] : [];
+  });
+  return [...TOPIC_RULES.filter((rule) => rule.re.test(value)), ...vocabularyMatches]
     .sort((a, b) => b.weight - a.weight)
     .filter((rule, index, all) => all.findIndex((candidate) => candidate.day === rule.day) === index)
     .slice(0, max)
