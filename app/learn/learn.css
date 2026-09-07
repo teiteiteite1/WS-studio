@@ -392,3 +392,8 @@
   .learn-deeper summary { grid-template-columns: 1fr auto; }
   .learn-deeper summary span { grid-column: 1 / -1; }
 }
+
+/* Long beginner definitions remain readable on narrow screens. */
+.learn-lesson { min-width: 0; overflow-wrap: anywhere; }
+.learn-block p { font-size: 1rem; }
+.learn-search input { font-size: 1rem; }
