@@ -25,7 +25,7 @@ function validDay(value: string | null) {
 function readDone() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed.map(Number).filter((day) => day >= 1 && day <= 30) : [];
+    return Array.isArray(parsed) ? [...new Set(parsed.map(Number).filter((day) => Number.isInteger(day) && day >= 1 && day <= 30))] : [];
   } catch {
     return [];
   }
@@ -48,6 +48,7 @@ export default function LearnClient() {
     const params = new URLSearchParams(window.location.search);
     const initial = validDay(params.get("day")) ?? validDay(localStorage.getItem(LAST_DAY_KEY)) ?? 1;
     selectedRef.current = initial;
+    localStorage.setItem(LAST_DAY_KEY, String(initial));
     const hydrateTimer = window.setTimeout(() => {
       setSelected(initial);
       setDone(readDone());
@@ -61,6 +62,8 @@ export default function LearnClient() {
     const onPopState = () => {
       const next = validDay(new URLSearchParams(window.location.search).get("day"));
       if (!next) return;
+      sessionStorage.setItem(`${SCROLL_PREFIX}${selectedRef.current}`, String(Math.round(window.scrollY)));
+      localStorage.setItem(LAST_DAY_KEY, String(next));
       selectedRef.current = next;
       setSelected(next);
       setShowAnswer(false);
@@ -102,6 +105,12 @@ export default function LearnClient() {
         item.title,
         item.lead,
         ...item.takeaways,
+        ...item.sections.flatMap((section) => [section.heading, ...section.paragraphs]),
+        item.example.title, item.example.body,
+        item.misconception.wrong, item.misconception.right,
+        item.quiz.q, item.quiz.a,
+        itemGuide.todaysIdea, itemGuide.whyExists, itemGuide.howUsed, itemGuide.whyCare,
+        ...itemGuide.realExamples, ...itemGuide.ownWords, itemGuide.explainPrompt,
         ...itemGuide.keyWords.flatMap((keyword) => [keyword.term, keyword.meaning]),
         ...itemGuide.newsTerms,
       ].join(" ").toLowerCase();
