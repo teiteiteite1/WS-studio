@@ -1,4 +1,4 @@
-export type ViewName = "home" | "ideas" | "favorites" | "create" | "story" | "archive" | "bible" | "notes";
+export type ViewName = "legacy_create" | "legacy_ideas" | "legacy_archive" | "home" | "ideas" | "favorites" | "create" | "story" | "archive" | "bible" | "notes";
 export type StoryType = "MAIN" | "SIDE" | "LINK";
 export type EpisodeStatus = "not_started" | "in_progress" | "prompt_ready" | "video_ready";
 export type WorkStatus = "draft" | "in_progress" | "completed" | "retry" | "failed" | "discarded";
@@ -13,6 +13,7 @@ export type ShafuIdea = {
   styles: string[];
   storyType: StoryType;
   status: "generated" | "favorite" | "dismissed" | "in_progress";
+  stockStatus?: "unused" | "prompted" | "video" | "hold";
   priority: 1 | 2 | 3;
   duplicateWarning: string;
   sourceIdeaId: string | null;
@@ -46,6 +47,10 @@ export type PreflightCheck = {
 
 export type ShafuProject = {
   id: string;
+  publicationStatus?: "unposted" | "scheduled" | "posted" | "discarded";
+  episodeNumber?: string;
+  production?: { title: string; summary: string; part1_prompt: string; part2_prompt: string };
+  metrics?: { views?: number; likes?: number; saves?: number; rating?: number; reflection?: string };
   ideaId: string | null;
   title: string;
   ideaText: string;
@@ -124,6 +129,7 @@ export type BibleVersion = {
 };
 
 export type ShafuNote = {
+  date?: string;
   id: string;
   title: string;
   body: string;
