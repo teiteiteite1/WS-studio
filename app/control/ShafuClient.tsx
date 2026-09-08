@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import ProductionPanel from "./ProductionPanel";
 import { ChangeEvent, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SyncAccount from "../components/SyncAccount";
 import type { PersonalSession } from "../lib/personalSync";
@@ -39,14 +40,10 @@ const LOCAL_KEY = "shafu_workspace_v1";
 const KEY_LOCAL = "ws_control_openai_key";
 const KEY_SESSION = "ws_control_openai_key_session";
 const NAV: Array<{ id: ViewName; label: string; short: string }> = [
-  { id: "home", label: "HOME", short: "HM" },
-  { id: "ideas", label: "IDEAS", short: "ID" },
-  { id: "favorites", label: "FAVORITES", short: "FV" },
-  { id: "create", label: "CREATE", short: "CR" },
-  { id: "story", label: "STORY", short: "ST" },
+  { id: "create", label: "PROMPT", short: "PR" },
+  { id: "ideas", label: "ネタ帳", short: "ID" },
   { id: "archive", label: "ARCHIVE", short: "AR" },
-  { id: "bible", label: "BIBLE", short: "BB" },
-  { id: "notes", label: "NOTES", short: "NT" },
+  { id: "notes", label: "MEMO", short: "ME" },
 ];
 const STAGES: ShafuProject["stage"][] = ["idea", "develop", "scenario", "preflight", "prompt"];
 const STORY_LABELS: Record<StoryType, string> = { MAIN: "本筋", SIDE: "小話", LINK: "本筋につながる小話" };
@@ -135,7 +132,7 @@ async function readLegacyReferenceFiles() {
 }
 
 export default function ShafuClient() {
-  const [view, setView] = useState<ViewName>("home");
+  const [view, setView] = useState<ViewName>("create");
   const [workspace, setWorkspace] = useState<ShafuWorkspace>(() => createDefaultWorkspace());
   const [hydrated, setHydrated] = useState(false);
   const [session, setSession] = useState<PersonalSession | null>(null);
@@ -286,7 +283,7 @@ export default function ShafuClient() {
   function openProject(projectId: string, stage?: ShafuProject["stage"]) {
     setActiveProjectId(projectId);
     if (stage) mutate((draft) => { const project = draft.projects.find((item) => item.id === projectId); if (project) project.stage = stage; });
-    setView("create");
+    setView("legacy_create");
   }
 
   function createFromIdea(idea: ShafuIdea) {
@@ -297,7 +294,7 @@ export default function ShafuClient() {
       draft.projects.unshift(project);
     });
     setActiveProjectId(project.id);
-    setView("create");
+    setView("legacy_create");
   }
 
   function patchProject(projectId: string, patch: Partial<ShafuProject>) {
@@ -549,7 +546,7 @@ export default function ShafuClient() {
   }
 
   function addNote() {
-    const note: ShafuNote = { id: newId(), title: "", body: "", pinned: false, createdAt: now(), updatedAt: now() };
+    const note: ShafuNote = { id: newId(), title: "", body: "", pinned: false, date: new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }), createdAt: now(), updatedAt: now() };
     mutate((draft) => { draft.notes.unshift(note); });
   }
 
@@ -616,6 +613,7 @@ export default function ShafuClient() {
         <div className="shafu-account"><SyncAccount onSessionChange={handleSession} description="同じアカウントでログインすると、SHAFUの制作途中・設定・素材をMacとiPhoneで同期します。" /></div>
         {notice && <div className="global-notice" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice("")}>×</button></div>}
 
+        {<div hidden={!["create", "ideas", "archive"].includes(view)}><ProductionPanel view={view} setView={setView} workspace={workspace} mutate={mutate} callAI={callAI} ready={hydrated && !["LOADING", "SYNC ERROR"].includes(syncState)} notify={setNotice} /></div>}
         {view === "home" && <section className="shafu-view home-view">
           <div className="page-kicker">SHAFU-CHAN PRODUCTION OS</div>
           <h1 className="home-title">Make less.<br /><em>Choose better.</em></h1>
@@ -637,7 +635,7 @@ export default function ShafuClient() {
           </div>
         </section>}
 
-        {view === "ideas" && <section className="shafu-view">
+        {view === "legacy_ideas" && <section className="shafu-view">
           <PageTitle eyebrow="EXPLORE" title="IDEAS" sub="完成脚本ではなく、何が起きる動画かだけを短く出す。" />
           <div className="control-panel">
             <div className="control-row length-row">
@@ -669,7 +667,7 @@ export default function ShafuClient() {
           <div className="favorite-grid">{[...favorites].sort((a,b)=>b.priority-a.priority||b.updatedAt.localeCompare(a.updatedAt)).map((idea)=><article className="favorite-card" key={idea.id}><div className="favorite-top"><span className={`priority p${idea.priority}`}>{priorityLabel(idea.priority)}</span><span>{formatDate(idea.createdAt)}</span></div><input className="title-input" value={idea.title} onChange={(e)=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item){item.title=e.target.value;item.updatedAt=now();}})} /><textarea value={idea.body} onChange={(e)=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item){item.body=e.target.value;item.updatedAt=now();}})} /><label className="tags-field">TAGS<input value={idea.tags.join(", ")} onChange={(e)=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item){item.tags=e.target.value.split(/[,、]+/).map((value)=>value.trim()).filter(Boolean);item.updatedAt=now();}})} placeholder="金欠, 夜, 部屋" /></label><div className="favorite-meta"><select aria-label="動画尺" value={idea.duration} onChange={(e)=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item)item.duration=Number(e.target.value);})}>{[30,35,40,45,50,55,60].map((n)=><option key={n} value={n}>{n} sec</option>)}</select><select aria-label="優先度" value={idea.priority} onChange={(e)=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item)item.priority=Number(e.target.value) as 1|2|3;})}><option value="1">LOW</option><option value="2">MID</option><option value="3">HIGH</option></select></div><div className="card-actions"><button type="button" onClick={()=>mutate((draft)=>{const item=draft.ideas.find((x)=>x.id===idea.id);if(item)item.status="dismissed";})}>REMOVE</button><button className="dark" type="button" onClick={()=>createFromIdea(idea)}>CREATE →</button></div></article>)}{!favorites.length&&<Empty title="まだ空っぽ" text="IDEASでSAVEするか、右上から自分のネタを追加できるよ。" />}</div>
         </section>}
 
-        {view === "create" && <section className="shafu-view create-view">
+        {view === "legacy_create" && <section className="shafu-view create-view">
           <PageTitle eyebrow="WORKBENCH" title="CREATE" sub="選んだネタだけを、段階を踏んで動画にする。" />
           <div className="project-switcher"><select value={activeProjectId || ""} onChange={(e)=>setActiveProjectId(e.target.value||null)}><option value="">制作中の作品を選択</option>{workspace.projects.filter((item)=>!["completed","failed","discarded"].includes(item.status)).map((project)=><option key={project.id} value={project.id}>{project.title}</option>)}</select><button type="button" onClick={()=>{const stamp=now();const idea:ShafuIdea={id:newId(),title:"新しい作品",body:"",duration:45,tags:[],directions:[],styles:["映像主体","セリフ少なめ"],storyType:"SIDE",status:"in_progress",priority:2,duplicateWarning:"",sourceIdeaId:null,source:"manual",createdAt:stamp,updatedAt:stamp};createFromIdea(idea);}}>＋ NEW</button></div>
           {activeProject ? <>
@@ -694,7 +692,7 @@ export default function ShafuClient() {
           <div className="section-head timeline-heading"><div><small>DRAG OR MOVE</small><h2>TIMELINE</h2></div><button type="button" onClick={()=>mutate((draft)=>{draft.timeline.push({id:newId(),projectId:null,episodeId:null,order:draft.timeline.length+1,code:`SIDE ${String(draft.timeline.length+1).padStart(2,"0")}`,title:"",storyType:"SIDE",whatHappened:"",characterChange:"",newCanon:"",resolvedThreads:"",newThreads:"",publishedAt:""});})}>＋ ADD</button></div><div className="timeline-list">{[...workspace.timeline].sort((a,b)=>a.order-b.order).map((item,index)=><article key={item.id} draggable onDragStart={()=>setDragTimelineId(item.id)} onDragOver={(e:DragEvent)=>e.preventDefault()} onDrop={()=>{if(dragTimelineId)reorderTimeline(dragTimelineId,item.id);setDragTimelineId(null);}}><div className="timeline-order"><span>{String(index+1).padStart(2,"0")}</span><button type="button" onClick={()=>moveTimeline(item.id,-1)}>↑</button><button type="button" onClick={()=>moveTimeline(item.id,1)}>↓</button></div><div className="timeline-main"><div className="field-grid three"><label>CODE<input value={item.code} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row.code=e.target.value;})} /></label><label>TYPE<select value={item.storyType} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row.storyType=e.target.value as StoryType;})}><option>MAIN</option><option>SIDE</option><option>LINK</option></select></label><label>TITLE<input value={item.title} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row.title=e.target.value;})} /></label></div><label className="published-field">PUBLISHED AT<input type="date" value={item.publishedAt} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row.publishedAt=e.target.value;})} /></label><label>WHAT HAPPENED<textarea value={item.whatHappened} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row.whatHappened=e.target.value;})} /></label><details><summary>変化・設定・伏線</summary><div className="field-grid two">{([['characterChange','CHARACTER CHANGE'],['newCanon','NEW CANON'],['resolvedThreads','RESOLVED'],['newThreads','NEW THREADS']] as const).map(([key,label])=><label key={key}>{label}<textarea value={item[key]} onChange={(e)=>mutate((draft)=>{const row=draft.timeline.find((x)=>x.id===item.id);if(row)row[key]=e.target.value;})} /></label>)}</div></details></div><button className="timeline-delete" type="button" onClick={()=>mutate((draft)=>{draft.timeline=draft.timeline.filter((x)=>x.id!==item.id).map((row,i)=>({...row,order:i+1}));})}>×</button></article>)}{!workspace.timeline.length&&<Empty title="公開順はまだ空" text="COMPLETEDにすると自動で追加。先に予定だけ並べてもOK。" />}</div>
         </section>}
 
-        {view === "archive" && <section className="shafu-view">
+        {view === "legacy_archive" && <section className="shafu-view">
           <PageTitle eyebrow="MEMORY" title="ARCHIVE" sub="完成もボツも残す。失敗理由は参考情報であって、AIの勝手な採点には使わない。" />
           <div className="archive-search"><input type="search" value={archiveQuery} onChange={(e)=>{setArchiveQuery(e.target.value);setSemanticIds(null);}} placeholder="金欠ネタ / 家から出ようとして結局出ない系" /><button type="button" disabled={Boolean(busy)||!archive.length} onClick={()=>void semanticSearch()}>{buttonBusy(busy,"semantic")?"SEARCHING…":"MEANING SEARCH"}</button>{semanticIds&&<button type="button" onClick={()=>setSemanticIds(null)}>CLEAR</button>}</div>
           <div className="archive-list">{visibleArchive.map((project)=>{const media=assets.filter((asset)=>asset.project_id===project.id||project.selectedAssetIds.includes(asset.id));return <article key={project.id}><div className="archive-status"><span className={project.status}>{project.status.toUpperCase()}</span><small>{formatDate(project.updatedAt)}</small></div><div><div className="idea-meta"><span>{project.duration} SEC</span><span className={`type ${project.storyType.toLowerCase()}`}>{project.storyType}</span><span>{project.promptModel}</span></div><h2>{project.title}</h2><p>{clip(project.ideaText||project.scenario,180)}</p>{project.failureReason&&<div className="failure">REASON · {project.failureReason}</div>}<details><summary>保存内容を見る</summary><label>ORIGINAL IDEA<textarea readOnly value={project.ideaText} /></label><label>SCENARIO<textarea readOnly value={project.scenario} /></label>{project.episodes.map((episode)=><label key={episode.id}>{episode.title} · {episode.status}<textarea readOnly value={episode.scenario} /></label>)}<label>FINAL PROMPT · EN<textarea readOnly value={project.promptEn} /></label><label>FINAL PROMPT · 日本語<textarea readOnly value={project.promptJa} /></label>{project.memo&&<label>MEMO<textarea readOnly value={project.memo} /></label>}{media.length>0&&<div className="archive-media"><b>MEDIA / REFERENCES</b>{media.map((asset)=><div key={asset.id}>{asset.kind==="completed_video"&&asset.signed_url?<video controls preload="metadata" src={asset.signed_url} />:asset.kind==="reference"&&asset.signed_url?<Image src={asset.signed_url} width={160} height={100} unoptimized alt={asset.tag||asset.file_name} />:<span>FILE</span>}<a href={asset.signed_url||undefined} target="_blank" rel="noreferrer">{asset.file_name}</a><button type="button" onClick={()=>void removeAsset(asset)}>DELETE</button></div>)}</div>}<div className="archive-detail">投稿日 {project.postedAt||"—"} · 投稿先 {project.postChannels.join(", ")||"—"}</div></details></div><button type="button" onClick={()=>openProject(project.id,"prompt")}>OPEN</button></article>})}{!visibleArchive.length&&<Empty title={archive.length?"一致なし":"まだ作品なし"} text={archive.length?"言い方を変えるか、MEANING SEARCHを試してね。":"PROMPTの最後でCOMPLETEDかFAILEDを選ぶと、ここへ残る。"} />}</div>
@@ -708,14 +706,14 @@ export default function ShafuClient() {
         </section>}
 
         {view === "notes" && <section className="shafu-view">
-          <PageTitle eyebrow="SCRATCHPAD" title="NOTES" sub="整えなくていいメモ帳。書いたまま自動保存する。" action={<button className="page-action" type="button" onClick={addNote}>＋ NEW NOTE</button>} />
-          <div className="notes-search"><input type="search" value={noteQuery} onChange={(e)=>setNoteQuery(e.target.value)} placeholder="メモを検索" /></div><div className="notes-grid">{workspace.notes.filter((note)=>[note.title,note.body].join(" ").toLowerCase().includes(noteQuery.toLowerCase())).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt.localeCompare(a.updatedAt)).map((note)=><article key={note.id} className={note.pinned?"pinned":""}><div className="note-top"><button type="button" onClick={()=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row)row.pinned=!row.pinned;})}>{note.pinned?"PINNED":"PIN"}</button><span>{formatDate(note.updatedAt,true)}</span><button type="button" onClick={()=>{if(confirm("このメモを削除する？"))mutate((draft)=>{draft.notes=draft.notes.filter((x)=>x.id!==note.id);});}}>DELETE</button></div><input value={note.title} onChange={(e)=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row){row.title=e.target.value;row.updatedAt=now();}})} placeholder="TITLE" /><textarea value={note.body} onChange={(e)=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row){row.body=e.target.value;row.updatedAt=now();}})} placeholder="思いつき、MTGで聞くこと、ネタの断片、保留事項…" /><div className="note-actions"><button type="button" onClick={()=>noteToStory(note)}>STORYへコピー</button><button className="dark" type="button" onClick={()=>noteToIdea(note)}>IDEASへコピー</button></div></article>)}{!workspace.notes.length&&<Empty title="雑でいい場所" text="MTGで聞きたいことも、動画の一言だけも、ここに放り込める。" action={<button className="primary-action" type="button" onClick={addNote}>CREATE FIRST NOTE</button>} />}</div>
+          <PageTitle eyebrow="SCRATCHPAD" title="MEMO" sub="整えなくていいメモ帳。書いたまま自動保存する。" action={<button className="page-action" type="button" onClick={addNote}>＋ NEW NOTE</button>} />
+          <div className="notes-search"><input type="search" value={noteQuery} onChange={(e)=>setNoteQuery(e.target.value)} placeholder="メモを検索" /></div><div className="notes-grid">{workspace.notes.filter((note)=>[note.title,note.body].join(" ").toLowerCase().includes(noteQuery.toLowerCase())).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt.localeCompare(a.updatedAt)).map((note)=><article key={note.id} className={note.pinned?"pinned":""}><div className="note-top"><button type="button" onClick={()=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row)row.pinned=!row.pinned;})}>{note.pinned?"PINNED":"PIN"}</button><span>{formatDate(note.updatedAt,true)}</span><button type="button" onClick={()=>{if(confirm("このメモを削除する？"))mutate((draft)=>{draft.notes=draft.notes.filter((x)=>x.id!==note.id);});}}>DELETE</button></div><label>日付<input type="date" value={note.date || note.createdAt.slice(0,10)} onChange={(e)=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row){row.date=e.target.value;row.updatedAt=now();}})} /></label><input value={note.title} onChange={(e)=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row){row.title=e.target.value;row.updatedAt=now();}})} placeholder="TITLE" /><textarea value={note.body} onChange={(e)=>mutate((draft)=>{const row=draft.notes.find((x)=>x.id===note.id);if(row){row.body=e.target.value;row.updatedAt=now();}})} placeholder="思いつき、MTGで聞くこと、ネタの断片、保留事項…" /><div className="note-actions"><button type="button" onClick={()=>noteToStory(note)}>STORYへコピー</button><button className="dark" type="button" onClick={()=>noteToIdea(note)}>IDEASへコピー</button></div></article>)}{!workspace.notes.length&&<Empty title="雑でいい場所" text="MTGで聞きたいことも、動画の一言だけも、ここに放り込める。" action={<button className="primary-action" type="button" onClick={addNote}>CREATE FIRST NOTE</button>} />}</div>
         </section>}
       </main>
 
       <nav className="shafu-mobile-nav" aria-label="Mobile navigation">{NAV.map((item)=><button type="button" key={item.id} className={view===item.id?"active":""} onClick={()=>setView(item.id)}><i>{item.short}</i><span>{item.label}</span></button>)}</nav>
 
-      {settingsOpen && <div className="settings-modal" role="dialog" aria-modal="true" aria-label="SHAFU settings" onMouseDown={(e)=>{if(e.target===e.currentTarget)setSettingsOpen(false);}}><div className="settings-card"><div className="settings-head"><div><small>SHAFU</small><h2>SETTINGS</h2></div><button type="button" onClick={()=>setSettingsOpen(false)}>×</button></div><label>OPENAI API KEY<input type="password" value={apiKeyDraft} onChange={(e)=>setApiKeyDraft(e.target.value)} placeholder="sk-..." autoComplete="off" /></label><label className="remember"><input type="checkbox" checked={rememberKey} onChange={(e)=>setRememberKey(e.target.checked)} />この端末に保存する</label><p>未チェックなら、このタブを閉じるまでだけ保持。キーはWS studioのDBへ保存しません。</p><button className="primary-action full" type="button" onClick={()=>{const key=apiKeyDraft.trim();if(!key){localStorage.removeItem(KEY_LOCAL);sessionStorage.removeItem(KEY_SESSION);}else if(rememberKey){localStorage.setItem(KEY_LOCAL,key);sessionStorage.removeItem(KEY_SESSION);}else{sessionStorage.setItem(KEY_SESSION,key);localStorage.removeItem(KEY_LOCAL);}setNotice(key?"APIキーを保存したよ。":"APIキーを削除したよ。");}}>SAVE KEY</button><div className="field-grid"><label>AI QUALITY<select value={workspace.settings.tier} onChange={(e)=>mutate((draft)=>{draft.settings.tier=e.target.value as ShafuWorkspace["settings"]["tier"];})}><option value="economy">Economy · Luna</option><option value="standard">Standard · Terra</option><option value="deep">Deep · Sol</option></select></label><label>DEFAULT MODEL<select value={workspace.settings.defaultVideoModel} onChange={(e)=>mutate((draft)=>{draft.settings.defaultVideoModel=e.target.value as "H3"|"Seedance";})}><option value="H3">MiniMax H3</option><option value="Seedance">Seedance</option></select></label></div><label>CUSTOM DIRECTIONS<input value={workspace.settings.customDirections.join(", ")} onChange={(e)=>mutate((draft)=>{draft.settings.customDirections=e.target.value.split(/[,、]+/).map((value)=>value.trim()).filter(Boolean);})} placeholder="追加・編集するカテゴリをカンマ区切りで" /></label><div className="settings-rule">BGMなし · 不要な文字なし · 実在ブランド/ロゴなし · 面白さの自動採否なし</div></div></div>}
+      {settingsOpen && <div className="settings-modal" role="dialog" aria-modal="true" aria-label="SHAFU settings" onMouseDown={(e)=>{if(e.target===e.currentTarget)setSettingsOpen(false);}}><div className="settings-card"><div className="settings-head"><div><small>SHAFU</small><h2>SETTINGS</h2></div><button type="button" onClick={()=>setSettingsOpen(false)}>×</button></div><label>OPENAI API KEY<input type="password" value={apiKeyDraft} onChange={(e)=>setApiKeyDraft(e.target.value)} placeholder="sk-..." autoComplete="off" /></label><label className="remember"><input type="checkbox" checked={rememberKey} onChange={(e)=>setRememberKey(e.target.checked)} />この端末に保存する</label><p>未チェックなら、このタブを閉じるまでだけ保持。キーはWS studioのDBへ保存しません。</p><button className="primary-action full" type="button" onClick={()=>{const key=apiKeyDraft.trim();if(!key){localStorage.removeItem(KEY_LOCAL);sessionStorage.removeItem(KEY_SESSION);}else if(rememberKey){localStorage.setItem(KEY_LOCAL,key);sessionStorage.removeItem(KEY_SESSION);}else{sessionStorage.setItem(KEY_SESSION,key);localStorage.removeItem(KEY_LOCAL);}setNotice(key?"APIキーを保存したよ。":"APIキーを削除したよ。");}}>SAVE KEY</button><div className="field-grid"><label>AI QUALITY<select value={workspace.settings.tier} onChange={(e)=>mutate((draft)=>{draft.settings.tier=e.target.value as ShafuWorkspace["settings"]["tier"];})}><option value="economy">Economy · Luna</option><option value="standard">Standard · Terra</option><option value="deep">Deep · Sol</option></select></label><label>DEFAULT MODEL<select value={workspace.settings.defaultVideoModel} onChange={(e)=>mutate((draft)=>{draft.settings.defaultVideoModel=e.target.value as "H3"|"Seedance";})}><option value="H3">MiniMax H3</option><option value="Seedance">Seedance</option></select></label></div><label>CUSTOM DIRECTIONS<input value={workspace.settings.customDirections.join(", ")} onChange={(e)=>mutate((draft)=>{draft.settings.customDirections=e.target.value.split(/[,、]+/).map((value)=>value.trim()).filter(Boolean);})} placeholder="追加・編集するカテゴリをカンマ区切りで" /></label><div className="note-actions"><button onClick={()=>{setView("bible");setSettingsOpen(false);}}>キャラ・声の設定</button><button onClick={()=>{setView("story");setSettingsOpen(false);}}>STORY</button><button onClick={()=>{setView("home");setSettingsOpen(false);}}>旧制作データ</button></div><div className="settings-rule">BGMなし · 不要な文字なし · 実在ブランド/ロゴなし · 面白さの自動採否なし</div></div></div>}
     </div>
   );
 }

@@ -127,3 +127,22 @@ test("H3 prompt response keeps bilingual reference tokens", async () => {
   assert.match(data.english, /@image1/);
   assert.match(data.japanese, /@image1/);
 });
+
+test("production rejects missing, blank and duplicate second parts", async () => {
+ for (const part2_prompt of [undefined, "   ", "前半"]) {
+  mockOpenAI({title:"テスト",summary:"全体",part1_prompt:"前半",part2_prompt,continuity:"公園、昼、ベンチ"});
+  const response=await POST(request("production_prompt",{seed:"公園で休む",edge:"社不"}));
+  assert.equal(response.status,502);
+ }
+});
+test("production returns two standalone prompts with shared rules and concrete continuity", async()=>{
+ mockOpenAI({title:"ベンチ",summary:"40秒の話",part1_prompt:"0〜20秒：ベンチに座る",part2_prompt:"0〜20秒：さらに横になる",continuity:"公園、昼、参照画像のパーカー、右手に缶、ベンチ右側に座る"});
+ const response=await POST(request("production_prompt",{seed:"ベンチを占領",edge:"炎上寸前",bible:{voice:"眠そうな可愛い声"}}));
+ assert.equal(response.status,200);const data=await response.json();
+ for(const part of [data.part1_prompt,data.part2_prompt])for(const term of ["20秒","社不ちゃん @image1","眠そうな可愛い声","共通演出","ネガティブプロンプト","BGMなし","右手に缶"])assert.ok(part.includes(term),term);
+ assert.match(data.part2_prompt,/PART 1の直後/);
+});
+test("additive production fields survive workspace normalization with old records",()=>{
+ const w=createDefaultWorkspace();w.projects=[{id:"legacy",promptJa:"旧原文",episodes:[]},{id:"new",production:{title:"a",summary:"b",part1_prompt:"c",part2_prompt:"d"},metrics:{views:10},publicationStatus:"scheduled"}];
+ const n=normalizeWorkspace(JSON.parse(JSON.stringify(w)));assert.deepEqual(n.projects,w.projects);
+});

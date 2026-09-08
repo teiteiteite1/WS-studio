@@ -169,7 +169,11 @@ async function ask<T>(options: AskOptions): Promise<{ json: T; model: string }> 
   }
 }
 
-const SHAFU_CORE = `社不ちゃん専用のショート動画企画として扱う。
+const SHAFU_CORE = `社不ちゃん専用の動画量産ツールとして扱う。
+- かわいい見た目なのに行動が終わっているギャップを優先する。
+- 良識的な教訓、感動、反省オチ、成長物語は禁止。
+- 深刻な暴力や重大犯罪でなく、非常識、下品、怠惰、不衛生、図々しさ、セコさ、開き直り、自己正当化で笑わせる。
+- 安全な失敗談だけで終わらせない。本人の欲望に一貫した、目に見える異常な行動と結果を作る。
 - 説明しすぎない。本人に状況・設定・オチを説明させない。ナレーションで補わない。
 - 映像で分かることは、視線、手、間、物の配置、動線、カメラで見せる。
 - きれいな起承転結、教訓、感動のまとめ、狙った決め台詞を無理に足さない。
@@ -198,6 +202,28 @@ export async function POST(request: Request) {
     const requestedTier = String(payload.tier || "standard");
     const tier: Tier = requestedTier === "economy" || requestedTier === "deep" ? requestedTier : "standard";
     const model = MODELS[tier];
+
+    if (action === "production_prompt") {
+      const seed = typeof payload.seed === "string" ? payload.seed.trim() : "";
+      const levels = ["普通", "社不", "かなり社不", "炎上寸前"];
+      if (!seed || seed.length > 12000 || !levels.includes(String(payload.edge))) return NextResponse.json({ error: "ネタ本文（12000文字以内）と攻め具合を確認してください。" }, { status: 400 });
+      const fields = ["title", "summary", "part1_prompt", "part2_prompt", "continuity"];
+      const schema = { type: "object", additionalProperties: false, properties: Object.fromEntries(fields.map(field => [field, { type: "string", minLength: 1 }])), required: fields };
+      const result = await ask<Record<string, string>>({ key, model, name: "shafu_production", schema,
+        instructions: `${SHAFU_CORE}
+完成した日本語動画プロンプトを一度で作る。全40秒、PART 1は0〜20秒、PART 2はその直後の20秒。必ず両方を完成させる。各PART内は0〜20秒の時間帯で、実行可能な3〜5ビートにする。PART 1最後に小さな引き、PART 2で一段エスカレートし最後は絵で残るオチ。台詞は短い自然な日本語で、各20秒に収まる量。
+攻め具合：普通=小さな非常識、社不=怠惰と図々しい自己正当化、かなり社不=不衛生さや下品さを行動で見せる、炎上寸前=周囲が引く非常識を平然と貫く。暴力や重大犯罪へ強度を逃がさない。
+キャラは「社不ちゃん @image1」。参照画像の外見・衣装を使い長い外見設定を書かない。未提供の参照番号は作らない。
+continuityにはPART 1最終フレームの具体的な人物配置、衣装、場所、時間帯、光、持ち物の位置、手・姿勢、途中の動作を日本語で列記し、PART 2冒頭はそのまま続行する。単なる「同じ場所」のような省略は禁止。両パートの出来事を重複させない。summaryは40秒全体の概要。各part_promptは演出・環境音・カメラ・動作・必要な台詞を含む完成本文。`,
+        input: `ネタ:${seed}\n攻め具合:${payload.edge}\n補足:${String(payload.notes || "").slice(0,4000)}\n設定:${boundedJSON(payload.bible,12000)}` });
+      const output = result.json;
+      if (!output || fields.some(field => typeof output[field] !== "string" || !output[field].trim()) || output.part1_prompt.trim() === output.part2_prompt.trim()) return NextResponse.json({ error: "PART 1・PART 2と接続情報が揃いませんでした。生成未完了です。再生成してください。" }, { status: 502 });
+      const bible = payload.bible && typeof payload.bible === "object" ? payload.bible as Record<string, unknown> : {};
+      const common = `キャラ：社不ちゃん @image1。外見・衣装は参照画像に一致。\n声指定：${String(bible.voice || "20代前半の女性。明るく少しエアリー、眠そうでだるい可愛い声。近接収音、短く自然な口語。 ")}\n共通演出：${String(bible.videoStyle || "映像と間で見せる。説明台詞に頼らない。")} BGMなし。台詞と環境音のみ。\nネガティブプロンプト：字幕、テロップ、画面内文字、ウォーターマーク、実在商品・店舗・ブランド・ロゴ、キャラ・衣装・声の変化、余分な手足、深刻な暴力、重大犯罪、教訓、感動、反省オチ、成長物語。${String(bible.never || "")}`;
+      return NextResponse.json({ title: output.title.trim(), summary: output.summary.trim(),
+        part1_prompt: `PART 1｜20秒\n${common}\n\n${output.part1_prompt.trim()}\n\n最終フレーム・PART 2への接続：${output.continuity.trim()}`,
+        part2_prompt: `PART 2｜20秒\n${common}\n\n開始状態・continuity：${output.continuity.trim()}。PART 1の直後から連続。人物・衣装・場所・時間帯・持ち物・動作を維持し、導入を繰り返さない。\n\n${output.part2_prompt.trim()}` });
+    }
 
     if (action === "connection_test") {
       const data = await postOpenAI(key, { model: MODELS.economy, store: false, input: "Reply with exactly OK.", max_output_tokens: 16 });

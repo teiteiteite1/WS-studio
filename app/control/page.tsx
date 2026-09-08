@@ -3,7 +3,7 @@ import ShafuClient from "./ShafuClient";
 
 export const metadata: Metadata = {
   title: "SHAFU · WS studio",
-  description: "社不ちゃん専用の動画制作・ストーリー管理システム",
+  description: "社不ちゃん用の20秒×2本動画プロンプト制作・ネタ帳・アーカイブ",
   robots: { index: false, follow: false },
 };
 
