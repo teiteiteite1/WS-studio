@@ -5,6 +5,13 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-49.webp", alt: "顔に前髪がかかる黒髪の少女が中指を立てる青白い色調のイラスト" },
+  { src: "/gallery/gallery-50.webp", alt: "宇宙や風景のコラージュを背景にぬいぐるみを抱く白髪の天使" },
+  { src: "/gallery/gallery-51.webp", alt: "都市を背景に身をかがめる白髪と白い翼の天使を描いた線画風イラスト" },
+  { src: "/gallery/gallery-52.webp", alt: "街路を歩く大きな柄入りの服を着た黒髪の少女" },
+  { src: "/gallery/gallery-53.webp", alt: "立入禁止のテープ越しに描かれたうつむく少女の青灰色のイラスト" },
+  { src: "/gallery/gallery-54.webp", alt: "黄色い木々を背景に淡いパーカーを着て横を向く黒髪の少女" },
+  { src: "/gallery/gallery-55.webp", alt: "荒れた室内で風になびく黒髪と黒い服の少女を描いたイラスト" },
   { src: "/gallery/gallery-48.webp", alt: "暗い森を背景に拳銃をこちらへ向ける白髪の天使を描いた青灰色のAIイラスト" },
   { src: "/gallery/gallery-39.webp", alt: "青と橙の抽象的な風景に立つ黒髪の少女を描いたAIイラスト作品" },
   { src: "/gallery/gallery-40.webp", alt: "屋外の光の中で座る緑色の瞳の白髪天使を描いた生成AIアート" },
