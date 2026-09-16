@@ -5,6 +5,12 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-56.webp", alt: "点滴のそばで淡いパーカーを着て振り返る白髪の少女" },
+  { src: "/gallery/gallery-57.webp", alt: "こちらへ拳を突き出す白髪と黒い服の少女を描いたイラスト" },
+  { src: "/gallery/gallery-58.webp", alt: "木漏れ日の中で身をかがめる白髪と白い翼の天使" },
+  { src: "/gallery/gallery-59.webp", alt: "飲み物のグラスが置かれたカウンターに伏せるうさぎ耳の少女" },
+  { src: "/gallery/gallery-60.webp", alt: "光輪を頭上に浮かべてうつむく白髪の天使の横顔" },
+  { src: "/gallery/gallery-61.webp", alt: "青白い光の中で髪をなびかせる白髪と青い瞳の天使を斜めに描いたイラスト" },
   { src: "/gallery/gallery-49.webp", alt: "顔に前髪がかかる黒髪の少女が中指を立てる青白い色調のイラスト" },
   { src: "/gallery/gallery-50.webp", alt: "宇宙や風景のコラージュを背景にぬいぐるみを抱く白髪の天使" },
   { src: "/gallery/gallery-51.webp", alt: "都市を背景に身をかがめる白髪と白い翼の天使を描いた線画風イラスト" },
