@@ -5,6 +5,10 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-62.webp", alt: "青い夜景と光の粒を背景に長い黒髪を風になびかせる少女" },
+  { src: "/gallery/gallery-63.webp", alt: "街路で大きな淡色のパーカーを着て振り返る黒髪の少女" },
+  { src: "/gallery/gallery-64.webp", alt: "街を見下ろす場所に立つ淡いピンクの長髪と黒い服の少女" },
+  { src: "/gallery/gallery-65.webp", alt: "黄色い立入禁止テープの向こうに立つ白髪と白い翼の天使" },
   { src: "/gallery/gallery-56.webp", alt: "点滴のそばで淡いパーカーを着て振り返る白髪の少女" },
   { src: "/gallery/gallery-57.webp", alt: "こちらへ拳を突き出す白髪と黒い服の少女を描いたイラスト" },
   { src: "/gallery/gallery-58.webp", alt: "木漏れ日の中で身をかがめる白髪と白い翼の天使" },
