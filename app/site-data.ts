@@ -5,6 +5,13 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-66.webp", alt: "夜の高架下で長い白髪を風になびかせてうつむく少女のイラスト" },
+  { src: "/gallery/gallery-67.webp", alt: "街を見下ろす屋上に立つ光輪と白い翼を持つ白髪の天使" },
+  { src: "/gallery/gallery-68.webp", alt: "青い瞳でこちらを見つめる白髪の少女を近距離から描いたイラスト" },
+  { src: "/gallery/gallery-69.webp", alt: "夜の森で月明かりを浴びる光輪と白い翼を持つ少女" },
+  { src: "/gallery/gallery-70.webp", alt: "暖かな光の中で振り返る白髪と白い翼の天使" },
+  { src: "/gallery/gallery-71.webp", alt: "黒髪の少女が頬に手を添えてこちらを見つめる線画風のイラスト" },
+  { src: "/gallery/gallery-72.webp", alt: "暗い背景で長い白髪をなびかせてうつむく少女のイラスト" },
   { src: "/gallery/gallery-62.webp", alt: "青い夜景と光の粒を背景に長い黒髪を風になびかせる少女" },
   { src: "/gallery/gallery-63.webp", alt: "街路で大きな淡色のパーカーを着て振り返る黒髪の少女" },
   { src: "/gallery/gallery-64.webp", alt: "街を見下ろす場所に立つ淡いピンクの長髪と黒い服の少女" },
