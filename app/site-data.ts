@@ -5,6 +5,13 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-73.webp", alt: "街を背景に二丁の拳銃をこちらへ向ける白髪の天使のイラスト" },
+  { src: "/gallery/gallery-74.webp", alt: "青空を背景に白いドレスと翼でうつむく光輪の天使" },
+  { src: "/gallery/gallery-75.webp", alt: "街の上空から見下ろす構図で描いた白い翼と光輪を持つ少女" },
+  { src: "/gallery/gallery-76.webp", alt: "黒いワンピースと翼をまとい、風に髪をなびかせる天使" },
+  { src: "/gallery/gallery-77.webp", alt: "空を背景に燃える剣を掲げる黒髪の天使の横顔" },
+  { src: "/gallery/gallery-78.webp", alt: "高層ビルの屋上に立つ黒い服と翼の天使を描いたモノクロ作品" },
+  { src: "/gallery/gallery-79.webp", alt: "暗い街で青く光る稲妻を頭上に掲げる黒髪の天使" },
   { src: "/gallery/gallery-66.webp", alt: "夜の高架下で長い白髪を風になびかせてうつむく少女のイラスト" },
   { src: "/gallery/gallery-67.webp", alt: "街を見下ろす屋上に立つ光輪と白い翼を持つ白髪の天使" },
   { src: "/gallery/gallery-68.webp", alt: "青い瞳でこちらを見つめる白髪の少女を近距離から描いたイラスト" },
