@@ -273,6 +273,18 @@ footer a:hover { opacity: .46; }
   transition: transform 800ms cubic-bezier(.2,.75,.25,1), filter 260ms ease;
 }
 .gallery-card:hover img { transform: scale(1.025); filter: brightness(.94); }
+.ip-section { background: #e3ecee; }
+.ip-feature { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: center; gap: clamp(36px, 6vw, 96px); margin-top: clamp(58px, 7vw, 96px); }
+.ip-artwork { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: clamp(20px, 2.5vw, 36px); background: #d0dde0; box-shadow: 0 16px 42px rgba(34,60,68,.1); }
+.ip-artwork img { object-fit: cover; }
+.ip-copy { min-width: 0; }
+.ip-kicker { margin: 0 0 20px; color: #6a7e84; font-size: 11px; font-weight: 650; letter-spacing: .18em; }
+.ip-copy h3 { margin: 0; font-size: clamp(38px, 5vw, 72px); font-weight: 450; letter-spacing: -.07em; line-height: 1.1; }
+.ip-description { margin: 24px 0 0; color: #526970; font-size: clamp(14px, 1.4vw, 18px); line-height: 1.9; }
+.ip-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin-top: 48px; border-top: 1px solid rgba(11,26,34,.16); }
+.ip-links a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 3px; border-bottom: 1px solid rgba(11,26,34,.16); font-size: 15px; transition: opacity 180ms ease, padding 180ms ease; }
+.ip-links a:hover { opacity: .6; padding-left: 10px; }
+.ip-links a span { font-size: 18px; }
 .music-section { background: #e3ecee; }
 .music-grid {
   margin-top: clamp(58px, 7vw, 96px);
@@ -686,6 +698,13 @@ footer > a:last-child { justify-self: end; }
   .section-link { padding: 4px 8px 0 0; }
   .gallery-grid { margin-top: 48px; gap: 6px; }
   .gallery-card { border-radius: 15px; }
+  .ip-feature { margin-top: 48px; grid-template-columns: 1fr; gap: 34px; }
+  .ip-artwork { border-radius: 24px; }
+  .ip-kicker { margin-bottom: 15px; }
+  .ip-copy h3 { font-size: 42px; }
+  .ip-description { margin-top: 16px; }
+  .ip-links { margin-top: 30px; gap: 0 15px; }
+  .ip-links a { min-height: 52px; font-size: 13px; }
   .music-grid { margin-top: 48px; grid-template-columns: 1fr; gap: 50px; }
   .music-artwork { border-radius: 24px; }
   .music-play { right: 15px; bottom: 15px; width: 54px; height: 54px; }

@@ -2,11 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import ContactForm from "./ContactForm";
 import GalleryGrid from "./GalleryGrid";
-import MusicGrid from "./MusicGrid";
 import QuickSocialLinks from "./QuickSocialLinks";
 import ShopGrid, { type ShopProduct } from "./ShopGrid";
 import { Logo, SectionTitle, SiteFooter, SiteHeader } from "./SiteChrome";
-import { galleryItems, musicTracks } from "./site-data";
+import { galleryItems } from "./site-data";
 
 type NoteArticle = { title: string; description: string; url: string };
 const baseShopUrl = "https://wsstudiotei.base.shop/";
@@ -74,7 +73,23 @@ export default async function Home() {
       </section>
 
       <section className="content-section gallery-section" id="gallery"><div className="section-title-row"><SectionTitle title="Gallery" /><Link className="section-link" href="/gallery">More →</Link></div><GalleryGrid items={galleryItems} randomize limit={6} /></section>
-      <section className="content-section music-section" id="music"><div className="section-title-row"><SectionTitle title="Music" /><Link className="section-link" href="/music">More →</Link></div><MusicGrid tracks={musicTracks} randomize limit={6} /></section>
+      <section className="content-section ip-section" id="ip">
+        <SectionTitle title="IP" />
+        <article className="ip-feature">
+          <div className="ip-artwork"><Image src="/profile/shafuchan.webp" alt="WS studioのキャラクター・社不ちゃん" fill sizes="(max-width: 640px) 100vw, 36vw" /></div>
+          <div className="ip-copy">
+            <p className="ip-kicker">CHARACTER / 01</p>
+            <h3>社不ちゃん</h3>
+            <p className="ip-description">社会不適合だがどこか憎めない女の子　君の社不エピソード募集中！</p>
+            <div className="ip-links" aria-label="社不ちゃんの公式アカウント">
+              <a href="https://x.com/syafu___chan" target="_blank" rel="noreferrer">X <span aria-hidden="true">↗</span></a>
+              <a href="https://www.instagram.com/syafu___chan/" target="_blank" rel="noreferrer">Instagram <span aria-hidden="true">↗</span></a>
+              <a href="https://www.tiktok.com/@syafu___chan" target="_blank" rel="noreferrer">TikTok <span aria-hidden="true">↗</span></a>
+              <a href="https://youtube.com/@syafu___ch?si=hMiu8uX7o1RrVEFw" target="_blank" rel="noreferrer">YouTube <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+        </article>
+      </section>
       <section className="content-section shop-section" id="shop"><div className="section-title-row"><SectionTitle title="Shop" /><a className="section-link" href={baseShopUrl} target="_blank" rel="noreferrer">More ↗</a></div>{shopProducts.length > 0 ? <ShopGrid products={shopProducts} /> : <a className="shop-panel" href={baseShopUrl} target="_blank" rel="noreferrer"><p>Visit online shop ↗</p></a>}</section>
       <section className="content-section profile-section" id="profile"><SectionTitle title="Profile" /><div className="profile-grid"><article className="profile-card"><div className="profile-image"><Image src="/profile/tei.webp" alt="てい" fill sizes="(max-width: 640px) 100vw, 33vw" /></div><h3>てい</h3><p>2025.6にWS studioを設立。自称AI playerとしてイラスト、動画、楽曲生成を手掛ける。</p></article><article className="profile-card"><div className="profile-image"><Image src="/profile/shafuchan.webp" alt="社不ちゃん" fill sizes="(max-width: 640px) 100vw, 33vw" /></div><h3>社不ちゃん</h3><p>社会不適合で不器用だがどこか憎めない女の子。タバコと酒が好き。</p></article><article className="profile-card"><div className="profile-image"><Image src="/profile/ochillchan.webp" alt="おchillちゃん" fill sizes="(max-width: 640px) 100vw, 33vw" /></div><h3>おchillちゃん</h3><p>文字通りchillな曲を歌うAIシンガー。</p></article></div></section>
       <section className="content-section news-section" id="news"><SectionTitle title="News" /><div className="news-list"><article><time dateTime="2026-10-01">2026.10.1</time><p>「社不ちゃん」新シリーズ開始</p></article><article><time dateTime="2026-09-12">2026.9.12–13</time><p>Send AI Art Exhibitionにて展示 @仙台</p></article><article><time dateTime="2026-08-06">2026.8.6</time><p>AI音楽コンピレーションアルバム「<a href="https://wsstudiotei.base.shop/items/152969255" target="_blank" rel="noreferrer">Now Generating</a>」発売</p></article><article><time dateTime="2026-07-25">2026.7.25</time><p><a href="https://tosu-designer.com/ai-fusion/" target="_blank" rel="noreferrer">AI FUSION FES</a>にて展示 @渋谷</p></article><article><time dateTime="2026-07-15">2026.7.15</time><p>OFFICIAL SITE 開設</p></article><article><time dateTime="2025-06-04">2025.6.4</time><p>WS studio設立</p></article></div></section>
@@ -86,7 +101,6 @@ export default async function Home() {
           <a href="https://x.com/WABISABI_pomo" target="_blank" rel="noreferrer"><span>X</span><span>@WABISABI_pomo</span><i>↗</i></a>
           <a href="https://www.instagram.com/teiteite1tei" target="_blank" rel="noreferrer"><span>Instagram</span><span>@teiteite1tei</span><i>↗</i></a>
           <a href="https://www.threads.com/@teiteite1tei" target="_blank" rel="noreferrer"><span>Threads</span><span>@teiteite1tei</span><i>↗</i></a>
-          <a href="https://suno.com/@teiteiteitei" target="_blank" rel="noreferrer"><span>SUNO</span><span>@teiteiteitei</span><i>↗</i></a>
         </div>
       </section>
       <section className="content-section contact-section" id="contact"><div className="contact-heading"><SectionTitle title="Contact" /></div><ContactForm /></section>
