@@ -7,8 +7,6 @@ const links: Array<{ label: string; href: string; brand: Brand }> = [
   { label: "X", href: "https://x.com/WABISABI_pomo", brand: "x" },
   { label: "Instagram", href: "https://www.instagram.com/teiteite1tei", brand: "instagram" },
   { label: "Threads", href: "https://www.threads.com/@teiteite1tei", brand: "threads" },
-  { label: "Bluesky", href: "https://bsky.app/profile/teiteiteite1.bsky.social", brand: "bluesky" },
-  { label: "Pinterest", href: "https://www.pinterest.com/teiwsstudio/", brand: "pinterest" },
   { label: "note", href: "https://note.com/teiteiteite1", brand: "note" },
   { label: "Spotify", href: "https://open.spotify.com/search/WS%20studio", brand: "spotify" },
   { label: "Shop", href: "https://wsstudiotei.base.shop/", brand: "shop" },
