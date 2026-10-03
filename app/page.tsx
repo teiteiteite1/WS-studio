@@ -55,8 +55,33 @@ async function getLatestNoteArticles(): Promise<NoteArticle[]> {
   } catch { return []; }
 }
 
+
+type ShafuShort = { id: string; title: string; url: string; published: string };
+async function getLatestShafuShorts(): Promise<ShafuShort[]> {
+  try {
+    const response = await fetch("https://www.youtube.com/feeds/videos.xml?channel_id=UCJwtI6Mbdci-tc6FXH1PvEA", { next: { revalidate: 600 }, signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error(`YouTube feed: ${response.status}`);
+    const xml = await response.text();
+    return (xml.match(/<entry>[\s\S]*?<\/entry>/gi) ?? []).flatMap((entry) => {
+      const id = rssTag(entry, "yt:videoId");
+      const title = decodeXml(rssTag(entry, "title"));
+      const published = rssTag(entry, "published");
+      const href = decodeXml(entry.match(/<link\b(?=[^>]*\brel=["']alternate["'])[^>]*\bhref=["']([^"']+)["']/i)?.[1] ?? "");
+      try {
+        const url = new URL(href);
+        if (!/^[a-zA-Z0-9_-]{11}$/.test(id) || !title || !Number.isFinite(Date.parse(published))) return [];
+        if (url.hostname !== "www.youtube.com" || url.pathname !== `/shorts/${id}`) return [];
+        return [{ id, title, published, url: url.href }];
+      } catch { return []; }
+    }).sort((a, b) => Date.parse(b.published) - Date.parse(a.published)).slice(0, 3);
+  } catch (error) {
+    console.error("Could not load Shafu YouTube Shorts", error);
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [noteArticles, shopProducts] = await Promise.all([getLatestNoteArticles(), getBaseProducts()]);
+  const [noteArticles, shopProducts, shafuShorts] = await Promise.all([getLatestNoteArticles(), getBaseProducts(), getLatestShafuShorts()]);
   return (
     <main>
       <SiteHeader />
@@ -76,11 +101,11 @@ export default async function Home() {
       <section className="content-section ip-section" id="ip">
         <SectionTitle title="IP" />
         <article className="ip-feature">
-          <div className="ip-artwork"><Image src="/profile/shafuchan.webp" alt="WS studioのキャラクター・社不ちゃん" fill sizes="(max-width: 640px) 100vw, 36vw" /></div>
           <div className="ip-copy">
             <p className="ip-kicker">CHARACTER / 01</p>
             <h3>社不ちゃん</h3>
             <p className="ip-description">社会不適合だがどこか憎めない女の子　君の社不エピソード募集中！</p>
+            <a className="ip-request" href="https://odaibako.net/u/syafu___chan" target="_blank" rel="noreferrer">社不エピソードを送る <span aria-hidden="true">↗</span></a>
             <div className="ip-links" aria-label="社不ちゃんの公式アカウント">
               <a href="https://x.com/syafu___chan" target="_blank" rel="noreferrer">X <span aria-hidden="true">↗</span></a>
               <a href="https://www.instagram.com/syafu___chan/" target="_blank" rel="noreferrer">Instagram <span aria-hidden="true">↗</span></a>
@@ -88,6 +113,12 @@ export default async function Home() {
               <a href="https://youtube.com/@syafu___ch?si=hMiu8uX7o1RrVEFw" target="_blank" rel="noreferrer">YouTube <span aria-hidden="true">↗</span></a>
             </div>
           </div>
+          {shafuShorts.length > 0 ? <div className="ip-shorts-grid" aria-label="社不ちゃんの最新YouTubeショート">
+            {shafuShorts.map((short) => <article className="ip-short-card" key={short.id}>
+              <div className="ip-short-player"><iframe src={`https://www.youtube-nocookie.com/embed/${short.id}?rel=0&playsinline=1`} title={short.title} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
+              <h4><a href={short.url} target="_blank" rel="noreferrer">{short.title}<span aria-hidden="true">↗</span></a></h4>
+            </article>)}
+          </div> : <p className="ip-shorts-fallback"><a href="https://www.youtube.com/@syafu___ch/shorts" target="_blank" rel="noreferrer">YouTubeでショートを見る ↗</a></p>}
         </article>
       </section>
       <section className="content-section shop-section" id="shop"><div className="section-title-row"><SectionTitle title="Shop" /><a className="section-link" href={baseShopUrl} target="_blank" rel="noreferrer">More ↗</a></div>{shopProducts.length > 0 ? <ShopGrid products={shopProducts} /> : <a className="shop-panel" href={baseShopUrl} target="_blank" rel="noreferrer"><p>Visit online shop ↗</p></a>}</section>

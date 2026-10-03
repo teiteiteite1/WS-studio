@@ -274,7 +274,7 @@ footer a:hover { opacity: .46; }
 }
 .gallery-card:hover img { transform: scale(1.025); filter: brightness(.94); }
 .ip-section { background: #e3ecee; }
-.ip-feature { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: center; gap: clamp(36px, 6vw, 96px); margin-top: clamp(58px, 7vw, 96px); }
+.ip-feature { margin-top: clamp(58px, 7vw, 96px); }
 .ip-artwork { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: clamp(20px, 2.5vw, 36px); background: #d0dde0; box-shadow: 0 16px 42px rgba(34,60,68,.1); }
 .ip-artwork img { object-fit: cover; }
 .ip-copy { min-width: 0; }
@@ -746,4 +746,21 @@ footer > a:last-child { justify-self: end; }
   .archive-heading h1 { font-size: clamp(66px, 22vw, 104px); text-align: left; }
   .archive-heading > a { margin-bottom: 8px; }
   .archive-content { width: calc(100% - 26px); margin-top: 60px; margin-bottom: 110px; }
+}
+
+.ip-request { display: inline-flex; align-items: center; gap: 28px; min-height: 48px; margin-top: 24px; padding: 10px 20px; border: 1px solid rgba(11,26,34,.22); border-radius: 999px; font-size: 13px; }
+.ip-request:hover { background: rgba(255,255,255,.65); }
+.ip-section .ip-links { display: flex; flex-wrap: wrap; gap: 12px 36px; margin-top: 28px; border-top: 0; }
+.ip-section .ip-links a { gap: 14px; min-height: 44px; }
+.ip-shorts-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 48px; }
+.ip-short-card { min-width: 0; margin: 0; }
+.ip-short-player { aspect-ratio: 9 / 16; overflow: hidden; border-radius: clamp(18px, 2.2vw, 32px); background: #071820; }
+.ip-short-player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.ip-short-card h4 { margin: 16px 3px 0; font-size: clamp(13px, 1.3vw, 17px); font-weight: 450; line-height: 1.55; }
+.ip-short-card h4 a { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.ip-short-card h4 span { flex: 0 0 auto; }
+.ip-shorts-fallback { margin-top: 48px; font-size: 14px; }
+@media (max-width: 640px) {
+  .ip-shorts-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(78vw, 320px); gap: 16px; overflow-x: auto; padding-bottom: 16px; scroll-snap-type: x mandatory; }
+  .ip-short-card { scroll-snap-align: start; }
 }
