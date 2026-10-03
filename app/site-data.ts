@@ -5,6 +5,12 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-87.webp", alt: "花々を背景に色鮮やかな刃を顔の前に掲げる白髪の少女" },
+  { src: "/gallery/gallery-88.webp", alt: "瓦礫の中に座る光輪と白い翼を持つ少女" },
+  { src: "/gallery/gallery-89.webp", alt: "街を背景に黒髪を風になびかせるパーカー姿の天使" },
+  { src: "/gallery/gallery-90.webp", alt: "崩れた街で長い剣を持つ黒髪と翼の天使" },
+  { src: "/gallery/gallery-91.webp", alt: "青空の下でこちらへ拳銃を向ける白髪の天使" },
+  { src: "/gallery/gallery-92.webp", alt: "炎の上がる街で振り返る黒いドレスと翼の天使" },
   { src: "/gallery/gallery-80.webp", alt: "光る輪を背に、手元に炎を灯す黒髪の天使" },
   { src: "/gallery/gallery-81.webp", alt: "青白い空の下、長い髪を風になびかせて見上げる黒髪の天使" },
   { src: "/gallery/gallery-82.webp", alt: "路地に立ち、胸の前で手を合わせる白い服と翼の天使" },
