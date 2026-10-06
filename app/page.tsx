@@ -59,7 +59,7 @@ async function getLatestNoteArticles(): Promise<NoteArticle[]> {
 type ShafuShort = { id: string; title: string; url: string; published: string };
 async function getLatestShafuShorts(): Promise<ShafuShort[]> {
   try {
-    const response = await fetch("https://www.youtube.com/feeds/videos.xml?channel_id=UCJwtI6Mbdci-tc6FXH1PvEA", { next: { revalidate: 600 }, signal: AbortSignal.timeout(10000) });
+    const response = await fetch("https://www.youtube.com/feeds/videos.xml?channel_id=UCJwtI6Mbdci-tc6FXH1PvEA", { next: { revalidate: 86400 }, signal: AbortSignal.timeout(10000) });
     if (!response.ok) throw new Error(`YouTube feed: ${response.status}`);
     const xml = await response.text();
     return (xml.match(/<entry>[\s\S]*?<\/entry>/gi) ?? []).flatMap((entry) => {
