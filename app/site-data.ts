@@ -5,6 +5,16 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-106.webp", alt: "夜の街でこちらに拳銃を向ける長い白髪と光輪の天使" },
+  { src: "/gallery/gallery-107.webp", alt: "木漏れ日の中で座る黒髪と黒い服の天使" },
+  { src: "/gallery/gallery-108.webp", alt: "青空の下で白髪を風になびかせる黒い服と白い翼の天使" },
+  { src: "/gallery/gallery-109.webp", alt: "色とりどりの花が咲く草原に横たわる金髪と白い翼の天使" },
+  { src: "/gallery/gallery-110.webp", alt: "高層ビルを背景に大きな鎌を掲げる白い服と翼の天使" },
+  { src: "/gallery/gallery-111.webp", alt: "燃え上がる翼と剣をまとい街に立つ黒い服の天使" },
+  { src: "/gallery/gallery-112.webp", alt: "街角でしゃがみ込むオレンジ色の長髪と白い翼の天使" },
+  { src: "/gallery/gallery-113.webp", alt: "白い空を背景に舌を出す黒髪と光輪の天使" },
+  { src: "/gallery/gallery-114.webp", alt: "夜の街でこちらへ拳を突き出す白髪と白い翼の天使" },
+  { src: "/gallery/gallery-115.webp", alt: "街の明かりを背景にうつむく金髪の少女の横顔" },
   { src: "/gallery/gallery-100.webp", alt: "瓦礫の街で長い髪を風になびかせる黒い服と翼の天使" },
   { src: "/gallery/gallery-101.webp", alt: "月明かりの中で二丁の拳銃をこちらへ向ける白髪の天使" },
   { src: "/gallery/gallery-102.webp", alt: "配管の下で膝を抱えて座る白いパーカーと翼の少女" },
