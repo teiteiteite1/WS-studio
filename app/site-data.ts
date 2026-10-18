@@ -5,6 +5,15 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-116.webp", alt: "瓦礫の中で大きな鎌を持つ白髪と白い翼の天使" },
+  { src: "/gallery/gallery-117.webp", alt: "花畑で白い花を口元に添える黒髪と白い翼の天使" },
+  { src: "/gallery/gallery-118.webp", alt: "青い空の下で炎に包まれる長い髪と翼の天使" },
+  { src: "/gallery/gallery-119.webp", alt: "崩れた建物を背景にこちらへ炎の剣を向ける金髪の天使" },
+  { src: "/gallery/gallery-120.webp", alt: "街の瓦礫に座りこちらを見つめる金髪と白い翼の天使" },
+  { src: "/gallery/gallery-121.webp", alt: "瓦礫の街で身をかがめる黒い服と白い翼の天使" },
+  { src: "/gallery/gallery-122.webp", alt: "夜景を見下ろす場所に立つ金髪と白い翼の天使" },
+  { src: "/gallery/gallery-123.webp", alt: "青空の下でこちらに拳銃を向ける金髪と白い翼の天使" },
+  { src: "/gallery/gallery-124.webp", alt: "白い花々の中で振り返る金髪と白い翼の天使" },
   { src: "/gallery/gallery-106.webp", alt: "夜の街でこちらに拳銃を向ける長い白髪と光輪の天使" },
   { src: "/gallery/gallery-107.webp", alt: "木漏れ日の中で座る黒髪と黒い服の天使" },
   { src: "/gallery/gallery-108.webp", alt: "青空の下で白髪を風になびかせる黒い服と白い翼の天使" },
