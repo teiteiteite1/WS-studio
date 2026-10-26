@@ -5,6 +5,16 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-125.webp", alt: "青空の見える路地で身をかがめる白髪と白い翼の天使" },
+  { src: "/gallery/gallery-126.webp", alt: "白い服の袖を口元に添えてこちらを見る黒髪と翼の天使" },
+  { src: "/gallery/gallery-127.webp", alt: "青空の下で骸骨を抱え、足元の頭蓋骨に囲まれる金髪の天使" },
+  { src: "/gallery/gallery-128.webp", alt: "白い服と翼をまとい、こちらへ長い武器を構える金髪の天使" },
+  { src: "/gallery/gallery-129.webp", alt: "光が差す建物の中で輝く剣をこちらへ向ける金髪の天使" },
+  { src: "/gallery/gallery-130.webp", alt: "斜めの構図でこちらへ手を伸ばす金髪と翼の天使" },
+  { src: "/gallery/gallery-131.webp", alt: "石造りの建物で長い剣をこちらへ突き出す金髪の天使" },
+  { src: "/gallery/gallery-132.webp", alt: "電線が交差する路地で剣を手に振り返る金髪と白い翼の天使" },
+  { src: "/gallery/gallery-133.webp", alt: "建物の中で青白く輝く大きな鎌を持つ金髪の天使" },
+  { src: "/gallery/gallery-134.webp", alt: "ステンドグラスを背景に翼を広げる黒い服の金髪天使" },
   { src: "/gallery/gallery-116.webp", alt: "瓦礫の中で大きな鎌を持つ白髪と白い翼の天使" },
   { src: "/gallery/gallery-117.webp", alt: "花畑で白い花を口元に添える黒髪と白い翼の天使" },
   { src: "/gallery/gallery-118.webp", alt: "青い空の下で炎に包まれる長い髪と翼の天使" },
