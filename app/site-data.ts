@@ -5,6 +5,9 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-135.webp", alt: "曇り空の下で炎をまとった剣を構える黒い服と翼の天使" },
+  { src: "/gallery/gallery-136.webp", alt: "暗い建物の中で白髪をなびかせる黒いシャツと白い翼の天使" },
+  { src: "/gallery/gallery-137.webp", alt: "こちらへ指を差す白髪と光輪、白い翼を持つ天使" },
   { src: "/gallery/gallery-125.webp", alt: "青空の見える路地で身をかがめる白髪と白い翼の天使" },
   { src: "/gallery/gallery-126.webp", alt: "白い服の袖を口元に添えてこちらを見る黒髪と翼の天使" },
   { src: "/gallery/gallery-127.webp", alt: "青空の下で骸骨を抱え、足元の頭蓋骨に囲まれる金髪の天使" },
