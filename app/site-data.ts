@@ -5,6 +5,13 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-144.webp", alt: "路地でしゃがみ込み、こちらを見下ろす黒髪ボブの少女" },
+  { src: "/gallery/gallery-145.webp", alt: "黒い鳥が飛び交う街で振り返る黒髪ボブの少女" },
+  { src: "/gallery/gallery-146.webp", alt: "暗い建物の中で青く輝く剣を構える黒髪の少女" },
+  { src: "/gallery/gallery-147.webp", alt: "装飾壁の前でタバコをくわえてしゃがむ黒髪と白い翼の天使" },
+  { src: "/gallery/gallery-148.webp", alt: "青白い夜景を見下ろしながら振り返る金髪と白い翼の天使" },
+  { src: "/gallery/gallery-149.webp", alt: "建物を背景にこちらへ拳銃を向ける白い服と翼の金髪天使" },
+  { src: "/gallery/gallery-150.webp", alt: "両腕のタトゥーを見せて中指を立てる金髪と白い翼の天使" },
   { src: "/gallery/gallery-138.webp", alt: "瓦礫の街で手のひらから炎を放つ金髪と白い翼の天使" },
   { src: "/gallery/gallery-139.webp", alt: "石造りの建物でこちらへ拳銃を構える白い服と翼の金髪天使" },
   { src: "/gallery/gallery-140.webp", alt: "暗い街で赤く輝く剣を振るう黒髪と白い翼の天使" },
