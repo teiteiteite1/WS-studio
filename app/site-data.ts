@@ -5,6 +5,14 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-151.webp", alt: "色鮮やかなステンドグラスの光を浴びて振り返る黒髪の少女" },
+  { src: "/gallery/gallery-152.webp", alt: "街の明かりを背景に舌を出す黒髪ボブの少女の横顔" },
+  { src: "/gallery/gallery-153.webp", alt: "虹色に揺らぐ空を背景に舌を出す緑色の瞳の黒髪少女" },
+  { src: "/gallery/gallery-154.webp", alt: "青空の見える路地でタバコをくわえて青い箱に座る黒髪の少女" },
+  { src: "/gallery/gallery-155.webp", alt: "黒い鳥が飛び交う街で両腕を広げる黒髪の少女" },
+  { src: "/gallery/gallery-156.webp", alt: "駅のホームで赤いマフラーをなびかせて振り返る黒髪の少女" },
+  { src: "/gallery/gallery-157.webp", alt: "両手を頬に添えて涙を流す緑色の瞳の黒髪少女" },
+  { src: "/gallery/gallery-158.webp", alt: "白い翼を広げ、指先に光る星を浮かべる白髪の天使" },
   { src: "/gallery/gallery-144.webp", alt: "路地でしゃがみ込み、こちらを見下ろす黒髪ボブの少女" },
   { src: "/gallery/gallery-145.webp", alt: "黒い鳥が飛び交う街で振り返る黒髪ボブの少女" },
   { src: "/gallery/gallery-146.webp", alt: "暗い建物の中で青く輝く剣を構える黒髪の少女" },
