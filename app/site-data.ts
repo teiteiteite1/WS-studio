@@ -5,6 +5,13 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-159.webp", alt: "日差しを手で遮り、こちらを見上げるセーラー服と黒髪ボブの少女" },
+  { src: "/gallery/gallery-160.webp", alt: "たくさんのテディベアに囲まれ、ぬいぐるみを抱いて横たわる黒髪の少女" },
+  { src: "/gallery/gallery-161.webp", alt: "大きな三日月に腰掛ける黒いドレスと白い翼の白髪天使" },
+  { src: "/gallery/gallery-162.webp", alt: "ぬいぐるみを抱いて眠る少女を暗い病室で見守る白髪の天使" },
+  { src: "/gallery/gallery-163.webp", alt: "夜の橋の欄干に裸足で座り、空を見上げる白髪と白い翼の天使" },
+  { src: "/gallery/gallery-164.webp", alt: "秋の公園でチェック柄のマフラーを巻き、いちごの飲み物を飲む黒髪の少女" },
+  { src: "/gallery/gallery-165.webp", alt: "街中で赤いヘッドホンとチェック柄のマフラーを着けた黒髪少女の横顔" },
   { src: "/gallery/gallery-151.webp", alt: "色鮮やかなステンドグラスの光を浴びて振り返る黒髪の少女" },
   { src: "/gallery/gallery-152.webp", alt: "街の明かりを背景に舌を出す黒髪ボブの少女の横顔" },
   { src: "/gallery/gallery-153.webp", alt: "虹色に揺らぐ空を背景に舌を出す緑色の瞳の黒髪少女" },
