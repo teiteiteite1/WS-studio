@@ -5,6 +5,18 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-166.webp", alt: "墓地でこちらを見上げる白髪と白い翼の天使" },
+  { src: "/gallery/gallery-167.webp", alt: "教室の椅子に座る鎖付きの首輪を着けた黒髪ボブの少女" },
+  { src: "/gallery/gallery-168.webp", alt: "紅葉に囲まれたブランコで揺れる白髪と白い翼の天使" },
+  { src: "/gallery/gallery-169.webp", alt: "森の浅い水辺に立ち、緑のドレスの裾を持つ金髪のエルフ" },
+  { src: "/gallery/gallery-170.webp", alt: "暗い路地でスカートの裾を持ち、太もものホルスターに拳銃を携えた黒髪の少女" },
+  { src: "/gallery/gallery-171.webp", alt: "色とりどりの薔薇に囲まれた黒いドレスと白い翼の白髪天使" },
+  { src: "/gallery/gallery-172.webp", alt: "廃墟で手のひらに高く燃える炎を浮かべる白髪の天使" },
+  { src: "/gallery/gallery-173.webp", alt: "夜の屋上でこちらへ拳銃を向ける金髪と白い翼の天使" },
+  { src: "/gallery/gallery-174.webp", alt: "夜の横断歩道を裸足で歩く白髪と白い翼の天使" },
+  { src: "/gallery/gallery-175.webp", alt: "紅葉の落ち葉の中で赤いもみじを拾う黒髪の少女" },
+  { src: "/gallery/gallery-176.webp", alt: "赤い薔薇と茨に囲まれ、うつむく白髪と白い翼の天使" },
+  { src: "/gallery/gallery-177.webp", alt: "夜の高架下の欄干に裸足で座り、空を見上げる白髪の天使" },
   { src: "/gallery/gallery-159.webp", alt: "日差しを手で遮り、こちらを見上げるセーラー服と黒髪ボブの少女" },
   { src: "/gallery/gallery-160.webp", alt: "たくさんのテディベアに囲まれ、ぬいぐるみを抱いて横たわる黒髪の少女" },
   { src: "/gallery/gallery-161.webp", alt: "大きな三日月に腰掛ける黒いドレスと白い翼の白髪天使" },
