@@ -5,6 +5,14 @@ export const navigation = [
 ] as const;
 
 export const galleryItems = [
+  { src: "/gallery/gallery-178.webp", alt: "カフェで大きな白いカップを口元に運ぶ、青い差し色の黒髪と白い翼の天使" },
+  { src: "/gallery/gallery-179.webp", alt: "教室の机に頬を伏せてこちらを見る黒髪ボブの少女" },
+  { src: "/gallery/gallery-180.webp", alt: "鎖のそばに座り、背後に不気味な顔が並ぶ赤い瞳と白い翼の天使" },
+  { src: "/gallery/gallery-181.webp", alt: "教室で机に足を乗せ、椅子に座って包丁を下げる黒髪の少女" },
+  { src: "/gallery/gallery-182.webp", alt: "薔薇に囲まれ、骸骨と手を取り合って踊る白髪と白い翼の天使" },
+  { src: "/gallery/gallery-183.webp", alt: "壁際で膝を抱え、赤い瞳から涙を流す白髪と白い翼の天使" },
+  { src: "/gallery/gallery-184.webp", alt: "街の明かりを背景にテディベアを抱えて振り返る黒髪の少女" },
+  { src: "/gallery/gallery-185.webp", alt: "瓦礫の街でこちらへ手を伸ばす白髪と白い翼の天使" },
   { src: "/gallery/gallery-166.webp", alt: "墓地でこちらを見上げる白髪と白い翼の天使" },
   { src: "/gallery/gallery-167.webp", alt: "教室の椅子に座る鎖付きの首輪を着けた黒髪ボブの少女" },
   { src: "/gallery/gallery-168.webp", alt: "紅葉に囲まれたブランコで揺れる白髪と白い翼の天使" },
